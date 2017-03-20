@@ -3,6 +3,7 @@
 const express = require('express')
 const bodyParser = require('body-parser')
 const request = require('request')
+const wimt = require('./wimt')
 const app = express()
 
 // recommended to inject access tokens as environmental variables, e.g.
@@ -40,7 +41,6 @@ app.post('/webhook/', function (req, res) {
 		if (event.message && event.message.text) {
 			let text = event.message.text
 			decideMessage(sender, text)
-			// sendTextMessage(sender, "Text received, echo: " + text.substring(0, 200))
 		}
 		if (event.postback) {
 			let text = JSON.stringify(event.postback)
@@ -53,7 +53,9 @@ app.post('/webhook/', function (req, res) {
 
 function decideMessage(sender, textInput) {
 	let text = textInput.toLowerCase()
-	if (text.includes("gardens")){
+	if (text.includes("Hi")){
+		sendLocation(sender)
+	} else if (text.includes("gardens")){
 		sendImageMessage(sender, "http://www.gardensapartments.co.za/wp-content/themes/gardensapartments/images/home/view-from-gardens-apartment.jpg")
 	} else if (text.includes("seapoint")) {
 		sendGenericMessage(sender)
@@ -61,7 +63,6 @@ function decideMessage(sender, textInput) {
 		sendTextMessage(sender, "I love Camps Bay?")
 		sendButtonMessage(sender, "What is your favorite place in Cape Town")
 	}
-
 }
 
 function sendTextMessage(sender, text) {
@@ -133,6 +134,18 @@ function sendGenericMessage(sender) {
 	sendRequest(sender, messageData)
 }
 
+function sendLocation(sender) {
+	let messageData = {
+    "text":"Please share your location:",
+    "quick_replies":[
+      {
+        "content_type":"location",
+      }
+    ]
+  }
+	sendRequest(sender, messageData)
+}
+
 function sendRequest(sender, messageData) {
 	request({
 		url: 'https://graph.facebook.com/v2.6/me/messages',
@@ -150,6 +163,9 @@ function sendRequest(sender, messageData) {
 		}
 	})
 }
+
+
+app.get('/wimt', wimt)
 
 app.listen(app.get('port'), function() {
 	console.log('running on port', app.get('port'))
