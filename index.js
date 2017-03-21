@@ -3,7 +3,7 @@
 const express = require('express')
 const bodyParser = require('body-parser')
 const request = require('request')
-const wimt = require('./wimt')
+// const wimt = require('./wimt')
 const app = express()
 
 // recommended to inject access tokens as environmental variables, e.g.
@@ -164,8 +164,7 @@ function sendRequest(sender, messageData) {
 	})
 }
 
-
-app.get('/wimt', wimt)
+// app.get('/wimt', wimt)
 
 app.listen(app.get('port'), function() {
 	console.log('running on port', app.get('port'))
