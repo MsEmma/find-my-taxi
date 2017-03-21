@@ -35,22 +35,49 @@ app.get('/webhook/', function (req, res) {
 // to post data
 app.post('/webhook/', function (req, res) {
 	let messaging_events = req.body.entry[0].messaging
-	for (let i = 0; i < messaging_events.length; i++) {
-		let event = req.body.entry[0].messaging[i]
+	messaging_events.forEach(function(event){
 		let sender = event.sender.id
-		console.log(sender);
 		if (event.message && event.message.text) {
+			receivedMessage(event)
 			let text = event.message.text
 			decideMessage(sender, text)
-		}
-		if (event.postback) {
+		} else if (event.postback) {
+			receivedPostback(event)
 			let text = JSON.stringify(event.postback)
 			decideMessage(sender, text)
-			continue
 		}
-	}
+	})
 	res.sendStatus(200)
 })
+
+// Incoming events handling
+function receivedMessage(event) {
+  var senderID = event.sender.id;
+  var recipientID = event.recipient.id;
+  var timeOfMessage = event.timestamp;
+  var message = event.message;
+
+  console.log("Received message for user %d and page %d at %d with message:",
+    senderID, recipientID, timeOfMessage);
+  console.log(JSON.stringify(message));
+}
+
+function receivedPostback(event) {
+  var senderID = event.sender.id;
+  var recipientID = event.recipient.id;
+  var timeOfPostback = event.timestamp;
+
+  // The 'payload' param is a developer-defined field which is set in a postback
+  // button for Structured Messages.
+  var payload = event.postback.payload;
+
+  console.log("Received postback for user %d and page %d with payload '%s' " +
+    "at %d", senderID, recipientID, payload, timeOfPostback);
+
+  // When a postback is called, we'll send a message back to the sender to
+  // let them know it was successful
+  sendTextMessage(senderID, "Postback called");
+}
 
 function decideMessage(sender, textInput) {
 	let text = textInput.toLowerCase()
@@ -144,7 +171,6 @@ function sendLocation(sender) {
       }
     ]
   }
-	console.log(messageData.quick_replies[0]);
 	sendRequest(sender, messageData)
 }
 
