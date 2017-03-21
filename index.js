@@ -53,7 +53,7 @@ app.post('/webhook/', function (req, res) {
 
 function decideMessage(sender, textInput) {
 	let text = textInput.toLowerCase()
-	if (text.includes("Hi")){
+	if (text.includes("hi")){
 		sendLocation(sender)
 	} else if (text.includes("gardens")){
 		sendImageMessage(sender, "http://www.gardensapartments.co.za/wp-content/themes/gardensapartments/images/home/view-from-gardens-apartment.jpg")
@@ -139,7 +139,7 @@ function sendLocation(sender) {
     "text":"Please share your location:",
     "quick_replies":[
       {
-        "content_type":"location",
+        "content_type":"location"
       }
     ]
   }
