@@ -164,6 +164,7 @@ function sendLocation(sender) {
       }
     ]
   }
+	console.log("Response", messageData);
 	sendRequest(sender, messageData)
 }
 
