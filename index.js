@@ -3,7 +3,7 @@
 const express = require('express')
 const bodyParser = require('body-parser')
 const request = require('request')
-// const wimt = require('./wimt')
+const wimt = require('./wimt')
 const app = express()
 
 // recommended to inject access tokens as environmental variables, e.g.
@@ -38,6 +38,7 @@ app.post('/webhook/', function (req, res) {
 	for (let i = 0; i < messaging_events.length; i++) {
 		let event = req.body.entry[0].messaging[i]
 		let sender = event.sender.id
+		console.log(sender);
 		if (event.message && event.message.text) {
 			let text = event.message.text
 			decideMessage(sender, text)
@@ -143,6 +144,7 @@ function sendLocation(sender) {
       }
     ]
   }
+	console.log(messageData.quick_replies[0]);
 	sendRequest(sender, messageData)
 }
 
@@ -164,7 +166,7 @@ function sendRequest(sender, messageData) {
 	})
 }
 
-// app.get('/wimt', wimt)
+app.get('/wimt', wimt)
 
 app.listen(app.get('port'), function() {
 	console.log('running on port', app.get('port'))
