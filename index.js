@@ -42,9 +42,9 @@ app.post('/webhook/', function (req, res) {
 			let text = event.message.text
 			decideMessage(sender, text)
 		} else if (event.message.attachments) {
-			receivedMessage(event)
+			receivedLocation(event)
 			let text = event.message.attachments[0].title
-			console.log(text);
+			decideMessage(sender, text)
 		} else if (event.postback) {
 			receivedPostback(event)
 			let text = JSON.stringify(event.postback)
@@ -76,11 +76,21 @@ function receivedPostback(event) {
     "at %d", senderID, recipientID, payload, timeOfPostback);
 }
 
+function receivedLocation(event) {
+  const senderID = event.sender.id;
+  const recipientID = event.recipient.id;
+  const timeOfPostback = event.timestamp;
+  const payload = event.message.attachments[0].payload;
+
+  console.log("Received postback for user %d and page %d with payload '%s' " +
+    "at %d", senderID, recipientID, payload, timeOfPostback);
+}
+
 function decideMessage(sender, textInput) {
 	let text = textInput.toLowerCase()
 	if (text.includes("hi")){
 		sendLocation(sender)
-	} else if (text.includes("send location")) {
+	} else if (text.includes("location")) {
 		sendTextMessage(sender, "Thanks for the location")
 	} else if (text.includes("gardens")){
 		sendImageMessage(sender, "http://www.gardensapartments.co.za/wp-content/themes/gardensapartments/images/home/view-from-gardens-apartment.jpg")
