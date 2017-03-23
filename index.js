@@ -41,7 +41,7 @@ app.post('/webhook/', function (req, res) {
 			receivedMessage(event)
 			let text = event.message.text
 			decideMessage(sender, text)
-		} else if (event.message.attachments) {
+		} else if (event.message.attachments[0]) {
 			receivedLocation(event)
 			let text = event.message.attachments[0].title
 			decideMessage(sender, text)
