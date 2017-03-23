@@ -76,6 +76,8 @@ function decideMessage(sender, textInput) {
 	let text = textInput.toLowerCase()
 	if (text.includes("hi")){
 		sendLocation(sender)
+	} else if (text.includes("send location")) {
+		sendTextMessage(sender, "Thanks for the location")
 	} else if (text.includes("gardens")){
 		sendImageMessage(sender, "http://www.gardensapartments.co.za/wp-content/themes/gardensapartments/images/home/view-from-gardens-apartment.jpg")
 	} else if (text.includes("seapoint")) {
