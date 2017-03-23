@@ -43,7 +43,7 @@ app.post('/webhook/', function (req, res) {
 			decideMessage(sender, text)
 		} else if (event.message.attachment) {
 			receivedMessage(event)
-			let text = event.message.attachment[0].title
+			let text = event.message.attachments[0].title
 			console.log(text);
 		} else if (event.postback) {
 			receivedPostback(event)
