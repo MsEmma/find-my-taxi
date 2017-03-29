@@ -40,13 +40,11 @@ app.post('/webhook/', function (req, res) {
 			receivedMessage(event)
 			let text = event.message.text
 			decideMessage(sender, text)
-		}
-			else if (event.message.attachments[0]) {
+		} else if (event.message.attachments) {
 			receivedLocation(event)
 			let text = event.message.attachments[0].title
 			decideMessage(sender, text)
-		}
-			else if (event.postback) {
+		} else if (event.postback) {
 			receivedPostback(event)
 			let text = JSON.stringify(event.postback)
 			decideMessage(sender, text)
