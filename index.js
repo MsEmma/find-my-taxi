@@ -143,16 +143,20 @@ function decideMessage(sender, textInput) {
 		sendTextMessage(sender, "Thanks for the location")
 	} else if (text.includes("gardens")){
 		sendImageMessage(sender, "http://www.gardensapartments.co.za/wp-content/themes/gardensapartments/images/home/view-from-gardens-apartment.jpg")
-	} else if (text.includes("seapoint")) {
-		sendGenericMessage(sender)
+	} else if (text.includes("greenpoint")) {
+		displayJourneyDetails(sender)
 	} else {
-		sendTextMessage(sender, "I love Camps Bay?")
-		sendButtonMessage(sender, "What is your favorite place in Cape Town")
+		sendTextMessage(sender, "Where would you like to go?")
+		sendButtonMessage(sender, "Choose your destination")
 	}
 }
 
 function sendTextMessage(sender, text) {
 	let messageData = { text:text }
+	sendRequest(sender, messageData)
+}
+
+function sendGenericMessage(sender, messageData) {
 	sendRequest(sender, messageData)
 }
 
@@ -171,8 +175,8 @@ function sendButtonMessage(sender, text) {
           },
           {
             "type":"postback",
-            "title":"Seapoint",
-            "payload":"seapoint"
+            "title":"Greenpoint",
+            "payload":"greenpoint"
           }
         ]
       }
@@ -193,14 +197,6 @@ function sendImageMessage(sender, imageURL) {
 	}
 	sendRequest(sender, messageData)
 }
-
-app.get('/wimt', function(req, res){
-	journeyDetails()
-	.then(result => {
-		// req.session.details = result
-		res.json(result)
-	})
-})
 
 function journeyDetails() {
 
@@ -233,7 +229,6 @@ function journeyDetails() {
 		})
 	})
 	.then(l => {
-		// console.log("journeyDetails", l)
 		return l
 	})
 }
@@ -256,7 +251,7 @@ function journeyDetails() {
 //     { mode: 'Walking', distance: '86 m', directions: [Object] } ]
 // ]
 
-function sendGenericMessage(sender) {
+function displayJourneyDetails(sender) {
 
 	journeyDetails()
 	.then(result => {
@@ -271,7 +266,7 @@ function sendGenericMessage(sender) {
 	        "elements":[
 						{
 							"title":"First leg",
-							"subtitle": option2[0].mode + "for" +  option2[0].distance
+							"subtitle": option2[0].mode + " for " +  option2[0].distance
 						},
 						{
 							"title":"Second leg",
@@ -279,13 +274,13 @@ function sendGenericMessage(sender) {
 						},
 						{
 							"title":"Last leg",
-							"subtitle": option2[2].mode + "for" +  option2[2].distance
+							"subtitle": option2[2].mode + " for " +  option2[2].distance
 						}
 	        ]
 	      }
 	    }
 		}
-		sendRequest(sender, messageData)
+		sendGenericMessage(sender, messageData)
 	})
 }
 
