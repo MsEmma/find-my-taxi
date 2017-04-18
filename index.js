@@ -216,7 +216,8 @@ function journeyDetails() {
 						route: lp.line.name,
 						fare: `R${lp.fare.cost.amount}`
 					}
-				} else {
+				}
+				else {
 					return {
 						mode: lp.type,
 						distance: `${lp.distance.value} ${lp.distance.unit}`,
@@ -250,6 +251,37 @@ function journeyDetails() {
 //       fare: 'R9' },
 //     { mode: 'Walking', distance: '86 m', directions: [Object] } ]
 // ]
+function displayJourneyOptions(sender) {
+
+		let messageData = {
+			"attachment":{
+	      "type":"template",
+	      "payload":{
+	        "template_type":"button",
+	        "text": text,
+	        "buttons":[
+	          {
+	            "type":"postback",
+	            "title":"Option 1",
+	            "payload":"option_1"
+	          },
+	          {
+	            "type":"postback",
+	            "title":"Option 2",
+	            "payload":"option_2"
+	          },
+	          {
+	            "type":"postback",
+	            "title":"Option 3",
+	            "payload":"option_3"
+	          }
+	        ]
+	      }
+	    }
+		}
+		sendGenericMessage(sender, messageData)
+}
+
 
 function displayJourneyDetails(sender) {
 
@@ -270,7 +302,7 @@ function displayJourneyDetails(sender) {
 						},
 						{
 							"title":"Second leg",
-							"subtitle": "Take a " + option2[1].mode + " from " + option2[1].route + " for " +  option2[1].distance
+							"subtitle": "Take a " + option2[1].mode + " from " + option2[1].route + " and travel for " +  option2[1].distance
 						},
 						{
 							"title":"Last leg",
