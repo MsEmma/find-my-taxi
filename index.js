@@ -83,22 +83,30 @@ function wimtAPICall() {
 
 // to post data
 app.post('/webhook/', function (req, res) {
+	let myID = 300416860375397
 	let messaging_events = req.body.entry[0].messaging
 	messaging_events.forEach(function(event){
 		let sender = event.sender.id
-		if (event.message && event.message.text) {
-			receivedMessage(event)
-			let text = event.message.text
-			decideMessage(sender, text)
-		} else if (event.message.attachments) {
-			receivedLocation(event)
-			let text = event.message.attachments[0].title
-			decideMessage(sender, text)
-		} else if (event.postback) {
+
+		if (event.message && event.message.attachments && event.message.attachments.length > 0 && sender != myID) {
+			let attachment = event.message.attachments[0];
+      if (attachment.type === 'location') {
+				receivedLocation(event)
+				let text = event.message.attachments[0].title
+				decideMessage(sender, text)
+        // processLocation(sender, attachment.payload.coordinates);
+      }
+    } else if (event.postback && event.postback.payload && sender != myID) {
 			receivedPostback(event)
 			let text = JSON.stringify(event.postback)
 			decideMessage(sender, text)
-		}
+    } else {
+      if (event.message && event.message.text && sender != myID) {
+				receivedMessage(event)
+				let text = event.message.text
+				decideMessage(sender, text)
+      }
+    }
 	})
 	res.sendStatus(200)
 })
@@ -138,11 +146,10 @@ function receivedLocation(event) {
 function decideMessage(sender, textInput) {
 	let text = textInput.toLowerCase()
 	if (text.includes("hi")){
+		sendTextMessage(sender, "Hi, Welcome to Find My Taxi - Lets help you find the closest taxi")
 		sendLocation(sender)
 	} else if (text.includes("location")) {
-		sendTextMessage(sender, "Thanks for the location")
-	} else if (text.includes("gardens")){
-		sendImageMessage(sender, "http://www.gardensapartments.co.za/wp-content/themes/gardensapartments/images/home/view-from-gardens-apartment.jpg")
+		sendTextMessage(sender, "Where would you like to go? Please type your destination")
 	} else if (text.includes("greenpoint")) {
 		displayJourneyDetails(sender)
 	} else {
@@ -150,6 +157,7 @@ function decideMessage(sender, textInput) {
 		sendButtonMessage(sender, "Choose your destination")
 	}
 }
+
 
 function sendTextMessage(sender, text) {
 	let messageData = { text:text }
@@ -159,6 +167,8 @@ function sendTextMessage(sender, text) {
 function sendGenericMessage(sender, messageData) {
 	sendRequest(sender, messageData)
 }
+
+
 
 function sendButtonMessage(sender, text) {
 	let messageData = {
@@ -216,8 +226,7 @@ function journeyDetails() {
 						route: lp.line.name,
 						fare: `R${lp.fare.cost.amount}`
 					}
-				}
-				else {
+				} else {
 					return {
 						mode: lp.type,
 						distance: `${lp.distance.value} ${lp.distance.unit}`,
@@ -233,55 +242,6 @@ function journeyDetails() {
 		return l
 	})
 }
-
-// [
-// 	[ { mode: 'Walking', distance: '3376 m', directions: [Object] } ],
-//
-//   [ { mode: 'Walking', distance: '630 m', directions: [Object] },
-//     { mode: 'Minibus taxi',
-//       distance: '10541m',
-//       route: 'Cape Town Taxi Rank to Camps Bay',
-//       fare: 'R9' },
-//     { mode: 'Walking', distance: '86 m', directions: [Object] } ],
-//
-//   [ { mode: 'Walking', distance: '630 m', directions: [Object] },
-//     { mode: 'Minibus taxi',
-//       distance: '10541m',
-//       route: 'Cape Town Taxi Rank to Camps Bay',
-//       fare: 'R9' },
-//     { mode: 'Walking', distance: '86 m', directions: [Object] } ]
-// ]
-function displayJourneyOptions(sender) {
-
-		let messageData = {
-			"attachment":{
-	      "type":"template",
-	      "payload":{
-	        "template_type":"button",
-	        "text": text,
-	        "buttons":[
-	          {
-	            "type":"postback",
-	            "title":"Option 1",
-	            "payload":"option_1"
-	          },
-	          {
-	            "type":"postback",
-	            "title":"Option 2",
-	            "payload":"option_2"
-	          },
-	          {
-	            "type":"postback",
-	            "title":"Option 3",
-	            "payload":"option_3"
-	          }
-	        ]
-	      }
-	    }
-		}
-		sendGenericMessage(sender, messageData)
-}
-
 
 function displayJourneyDetails(sender) {
 
@@ -315,32 +275,6 @@ function displayJourneyDetails(sender) {
 		sendGenericMessage(sender, messageData)
 	})
 }
-
-// function sendGenericMessage(sender) {
-// 	let messageData = {
-// 		"attachment": {
-//       "type":"template",
-//       "payload":{
-//         "template_type":"generic",
-//         "elements":[
-//            {
-//             "title":"Seapoint",
-// 						"image_url":"http://www.capetownlife.co.za/wp-content/uploads/2014/05/Sea-Point.jpg",
-//             "subtitle":"I love the sea",
-//             "buttons":[
-//               {
-//                 "type":"web_url",
-//                 "url":"https://en.wikipedia.org/wiki/Sea_Point",
-//                 "title":"More about Seapoint"
-//               }
-//             ]
-//           }
-//         ]
-//       }
-//     }
-// 	}
-// 	sendRequest(sender, messageData)
-// }
 
 function sendLocation(sender) {
 	let messageData = {
