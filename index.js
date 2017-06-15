@@ -6,10 +6,6 @@ const bodyParser = require('body-parser')
 const request = require('request')
 const app = express()
 
-// recommended to inject access tokens as environmental variables, e.g.
-// const token = process.env.FB_PAGE_ACCESS_TOKEN
-const fbToken = "EAAFePO2rmvwBAMQagXwh4uRZAMpNncMPbpnEDfi6euIiweaajflOE2DkMExFcVQYtA59MsfhWaxvfZAKnLHoJXUleZAoLpVGl1DbNe3gdUlnxZAZADxySk7VcwW5dD54q8M1VUlJwmLLHmlL6VlxR6qimjgp5UeHnYZBzstKbtXgZDZD"
-
 app.set('port', (process.env.PORT || 5000))
 
 // parse application/x-www-form-urlencoded
@@ -295,7 +291,7 @@ function sendRequest(sender, messageData) {
 	return new Promise((resolve, reject) => {
 		request({
 			url: 'https://graph.facebook.com/v2.6/me/messages',
-			qs: {access_token: fbToken},
+			qs: {access_token: process.env.PAGE_ACCESS_TOKEN},
 			method: 'POST',
 			json: {
 				recipient: {id:sender},
