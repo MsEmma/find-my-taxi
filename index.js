@@ -161,8 +161,11 @@ function decideMessage(sender, textInput) {
 		// sendTextMessage(sender, "Where are you going? Type the name of the taxi rank.")
 		// // sendLocation(sender)
 	} else if (text.includes("location")) {
-		sendTextMessage(sender, "Where would you like to go?")
-		sendButtonMessage(sender, "Please choose your destination")
+
+    return displayJourneyDetails(sender)
+	
+		// sendTextMessage(sender, "Where would you like to go?")
+		// sendButtonMessage(sender, "Please choose your destination")
 	} else if (text.includes("greenpoint")) {
 
 		setTimeout(() => {
@@ -174,9 +177,7 @@ function decideMessage(sender, textInput) {
 		setTimeout(() => {
     	sendLocation(sender)
 		}, 3000)
-		setTimeout(() => {
-    	return displayJourneyDetails(sender)
-		}, 6000)
+
 		// return displayJourneyDetails(sender),
 		// sendTextMessage(sender, "There are two taxis on the way. One will arrive in about 2 minutes and the other in about 6 minutes. Happy travels")
 	} else if (text.includes("langa")) {
