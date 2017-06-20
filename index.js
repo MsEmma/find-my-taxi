@@ -141,9 +141,12 @@ function receivedLocation(event) {
 
 function decideMessage(sender, textInput) {
 	let text = textInput.toLowerCase()
-	if (text.includes("hi") || text.includes("Get Started")){
-		sendTextMessage(sender, "Hi, Welcome to Find My Taxi - Lets help you find the closest taxi"),
-		sendLocation(sender)
+	if (text.includes("hi") || text.includes("get started")){
+		sendTextMessage(sender, "Welcome to Find My Taxi 😄 We will give you directions for getting around using minibus taxis. 🚌")
+		sendTextMessage(sender, "Right now, we can only tell you about areas near Cape Town. 🇿🇦")
+		sendTextMessage(sender, "Give it a try! You can type “help” at any time, or “restart” to start again.")
+		sendTextMessage(sender, "Where are you going? Type the name of the taxi rank.")
+		// sendLocation(sender)
 	} else if (text.includes("location")) {
 		sendTextMessage(sender, "Where would you like to go?")
 		sendButtonMessage(sender, "Please choose your destination")
