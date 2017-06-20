@@ -164,8 +164,28 @@ function decideMessage(sender, textInput) {
 		sendTextMessage(sender, "Where would you like to go?")
 		sendButtonMessage(sender, "Please choose your destination")
 	} else if (text.includes("greenpoint")) {
-		return displayJourneyDetails(sender),
-		sendTextMessage(sender, "There are two taxis on the way. One will arrive in about 2 minutes and the other in about 6 minutes. Happy travels")
+
+		setTimeout(() => {
+    	sendTextMessage(sender, "Okay, let’s get you to Greenpoint! ")
+		}, 1000)
+		setTimeout(() => {
+    	sendTextMessage(sender, "Where are you now? Tap the button ⬇️")
+		}, 2000)
+		setTimeout(() => {
+    	sendLocation(sender)
+		}, 3000)
+		// return displayJourneyDetails(sender),
+		// sendTextMessage(sender, "There are two taxis on the way. One will arrive in about 2 minutes and the other in about 6 minutes. Happy travels")
+	} else if (text.includes("langa")) {
+		setTimeout(() => {
+    	sendTextMessage(sender, "Okay, let’s get you to Langa! ")
+		}, 1000)
+		setTimeout(() => {
+    	sendTextMessage(sender, "Where are you now? Tap the button ⬇️")
+		}, 2000)
+		setTimeout(() => {
+    	sendLocation(sender)
+		}, 3000)
 	} else {
 		sendTextMessage(sender, "Where would you like to go?")
 		sendButtonMessage(sender, "Choose your destination")
