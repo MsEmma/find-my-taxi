@@ -174,6 +174,9 @@ function decideMessage(sender, textInput) {
 		setTimeout(() => {
     	sendLocation(sender)
 		}, 3000)
+		setTimeout(() => {
+    	return displayJourneyDetails(sender)
+		}, 4000)
 		// return displayJourneyDetails(sender),
 		// sendTextMessage(sender, "There are two taxis on the way. One will arrive in about 2 minutes and the other in about 6 minutes. Happy travels")
 	} else if (text.includes("langa")) {
@@ -181,7 +184,7 @@ function decideMessage(sender, textInput) {
     	sendTextMessage(sender, "Okay, let’s get you to Langa! ")
 		}, 1000)
 		setTimeout(() => {
-    	sendTextMessage(sender, "Where are you now? Tap the button ⬇️")
+    	sendTextMessage(sender, "Where are you now?")
 		}, 2000)
 		setTimeout(() => {
     	sendLocation(sender)
