@@ -29,7 +29,10 @@ app.get('/webhook/', function (req, res) {
 })
 
 // whereismytransport api call
-function wimtAPICall() {
+function wimtAPICall(loc) {
+
+	let long = loc.long
+	let lat = loc.lat
 
 	return new Promise((resolve, reject) => {
 
@@ -55,7 +58,7 @@ function wimtAPICall() {
     	var body = {
       	geometry: {
         	type: "Multipoint",
-        	coordinates: [[18.425059, -33.922138], [18.399267, -33.908676]]
+        	coordinates: [[long, lat], [18.399267, -33.908676]]
       	}
     	}
 
@@ -89,12 +92,12 @@ app.post('/webhook/', function (req, res) {
       if (attachment.type === 'location') {
 				receivedLocation(event)
 				let text = event.message.attachments[0].title
-				decideMessage(sender, text)
-        // processLocation(sender, attachment.payload.coordinates);
+				let loc = attachment.payload.coordinates
+				displayJourneyDetails(sender, loc)
       }
     } else if (event.postback && event.postback.payload && sender != myID) {
 			receivedPostback(event)
-			let text = JSON.stringify(event.postback)
+			let text= JSON.stringify(event.postback)
 			decideMessage(sender, text)
     } else {
       if (event.message && event.message.text && sender != myID) {
@@ -141,7 +144,8 @@ function receivedLocation(event) {
 
 function decideMessage(sender, textInput) {
 	let text = textInput.toLowerCase()
-	if (text.includes("hi") || text.includes("get started")){
+
+	if (text.includes("hi") || text.includes("get_started_payload")){
 		setTimeout(() => {
     	sendTextMessage(sender, "Welcome to Find My Taxi 😄 We will give you directions for getting around using minibus taxis. 🚌")
 		}, 1000)
@@ -155,17 +159,10 @@ function decideMessage(sender, textInput) {
     	sendTextMessage(sender, "Where are you going? Type the name of the taxi rank.")
 		}, 4000)
 
-		// sendTextMessage(sender, "Welcome to Find My Taxi 😄 We will give you directions for getting around using minibus taxis. 🚌")
-		// sendTextMessage(sender, "Right now, we can only tell you about areas near Cape Town. 🇿🇦")
-		// sendTextMessage(sender, "Give it a try! You can type “help” at any time, or “restart” to start again.")
-		// sendTextMessage(sender, "Where are you going? Type the name of the taxi rank.")
-		// // sendLocation(sender)
-	} else if (text.includes("location")) {
+	} else if (text.includes("lat")) {
 
-    return displayJourneyDetails(sender)
-	
-		// sendTextMessage(sender, "Where would you like to go?")
-		// sendButtonMessage(sender, "Please choose your destination")
+    return displayJourneyDetails(sender, loc)
+
 	} else if (text.includes("greenpoint")) {
 
 		setTimeout(() => {
@@ -178,9 +175,8 @@ function decideMessage(sender, textInput) {
     	sendLocation(sender)
 		}, 3000)
 
-		// return displayJourneyDetails(sender),
-		// sendTextMessage(sender, "There are two taxis on the way. One will arrive in about 2 minutes and the other in about 6 minutes. Happy travels")
 	} else if (text.includes("langa")) {
+
 		setTimeout(() => {
     	sendTextMessage(sender, "Okay, let’s get you to Langa! ")
 		}, 1000)
@@ -190,12 +186,12 @@ function decideMessage(sender, textInput) {
 		setTimeout(() => {
     	sendLocation(sender)
 		}, 3000)
-	} else {
-		sendTextMessage(sender, "Where would you like to go?")
-		sendButtonMessage(sender, "Choose your destination")
 	}
+	// else {
+	// 	sendTextMessage(sender, "Where would you like to go?")
+	// 	sendButtonMessage(sender, "Choose your destination")
+	// }
 }
-
 
 function sendTextMessage(sender, text) {
 	let messageData = { text:text }
@@ -205,8 +201,6 @@ function sendTextMessage(sender, text) {
 function sendGenericMessage(sender, messageData) {
 	sendRequest(sender, messageData)
 }
-
-
 
 function sendButtonMessage(sender, text) {
 	let messageData = {
@@ -246,9 +240,9 @@ function sendImageMessage(sender, imageURL) {
 	sendRequest(sender, messageData)
 }
 
-function journeyDetails() {
+function journeyDetails(loc) {
 
-	return wimtAPICall()
+	return wimtAPICall(loc)
 	.then(result => {
 		return result.itineraries.map(itinerary => {
 			return itinerary.legs
@@ -281,9 +275,9 @@ function journeyDetails() {
 	})
 }
 
-function displayJourneyDetails(sender) {
+function displayJourneyDetails(sender, loc) {
 
-	journeyDetails()
+	journeyDetails(loc)
 	.then(result => {
 
 		let option2 = result[1]
