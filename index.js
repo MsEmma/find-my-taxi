@@ -141,7 +141,7 @@ function receivedLocation(event) {
 
 function decideMessage(sender, textInput) {
 	let text = textInput.toLowerCase()
-	if (text.includes("hi")){
+	if (text.includes("hi") || text.includes("get started")){
 		sendTextMessage(sender, "Hi, Welcome to Find My Taxi - Lets help you find the closest taxi"),
 		sendLocation(sender)
 	} else if (text.includes("location")) {
