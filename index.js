@@ -212,8 +212,8 @@ function sendButtonMessage(sender, text) {
         "buttons":[
           {
             "type":"postback",
-            "title":"Gardens",
-            "payload":"gardens"
+            "title":"Langa",
+            "payload":"langa"
           },
           {
             "type":"postback",
@@ -256,12 +256,14 @@ function journeyDetails(loc) {
 						mode: "Minibus taxi",
 						distance: `${lp.distance.value}${lp.distance.unit}`,
 						route: lp.line.name,
-						fare: `R${lp.fare.cost.amount}`
+						fare: `R${lp.fare.cost.amount}`,
+						duration: `${ Math.round(lp.duration/60) } minutes`
 					}
 				} else {
 					return {
 						mode: lp.type,
 						distance: `${lp.distance.value} ${lp.distance.unit}`,
+						duration: `${ Math.round(lp.duration/60) } minutes`,
 						directions: lp.directions.map(dir =>{
 							return `${dir.instruction} for ${dir.distance.value}m`
 						})
@@ -279,6 +281,8 @@ function displayJourneyDetails(sender, loc) {
 
 	journeyDetails(loc)
 	.then(result => {
+
+		console.log("Result", result)
 
 		let option2 = result[1]
 
