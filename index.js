@@ -21,7 +21,8 @@ app.get('/', function (req, res) {
 
 // for facebook verification
 app.get('/webhook/', function (req, res) {
-	if (req.query['hub.verify_token'] === process.env.VERIFICATION_TOKEN) {
+	// if (req.query['hub.verify_token'] === process.env.VERIFICATION_TOKEN) {
+	if (req.query['hub.verify_token'] === "Emmalicious") {
 		res.send(req.query['hub.challenge'])
 	} else {
 		res.send('Error, wrong token')
@@ -58,7 +59,7 @@ function wimtAPICall(loc) {
     	var body = {
       	geometry: {
         	type: "Multipoint",
-        	coordinates: [[long, lat], [18.399267, -33.908676]]
+        	coordinates: [[long, lat], [18.5317533, -33.9456557]]
       	}
     	}
 
@@ -69,7 +70,7 @@ function wimtAPICall(loc) {
 	        "Content-Type": "application/json",
 	        "Authorization": "Bearer " + TOKEN
 	      },
-	      url: "https://platform.whereismytransport.com/api/journeys?exclude=geometry",
+	      url: "https://platform.whereismytransport.com/api/journeys",
 	      body: JSON.stringify(body)
 	    }
 
@@ -93,7 +94,7 @@ app.post('/webhook/', function (req, res) {
 				receivedLocation(event)
 				let text = event.message.attachments[0].title
 				let loc = attachment.payload.coordinates
-				displayJourneyDetails(sender, loc)
+				displayJourneySummary(sender, loc)
       }
     } else if (event.postback && event.postback.payload && sender != myID) {
 			receivedPostback(event)
@@ -161,7 +162,7 @@ function decideMessage(sender, textInput) {
 
 	} else if (text.includes("lat")) {
 
-    return displayJourneyDetails(sender, loc)
+    return displayJourneySummary(sender, loc)
 
 	} else if (text.includes("greenpoint")) {
 
@@ -186,6 +187,11 @@ function decideMessage(sender, textInput) {
 		setTimeout(() => {
     	sendLocation(sender)
 		}, 3000)
+
+	} else if (text.includes("route")) {
+
+    sendTextMessage(sender, "Happy travels")
+
 	}
 	// else {
 	// 	sendTextMessage(sender, "Where would you like to go?")
@@ -254,16 +260,16 @@ function journeyDetails(loc) {
 				if(lp.type === "Transit") {
 					return {
 						mode: "Minibus taxi",
-						distance: `${lp.distance.value}${lp.distance.unit}`,
+						distance: lp.distance.value,
 						route: lp.line.name,
-						fare: `R${lp.fare.cost.amount}`,
-						duration: `${ Math.round(lp.duration/60) } minutes`
+						fare: lp.fare.cost.amount,
+						duration: Math.round(lp.duration/60)
 					}
 				} else {
 					return {
 						mode: lp.type,
-						distance: `${lp.distance.value} ${lp.distance.unit}`,
-						duration: `${ Math.round(lp.duration/60) } minutes`,
+						distance: lp.distance.value,
+						duration: Math.round(lp.duration/60),
 						directions: lp.directions.map(dir =>{
 							return `${dir.instruction} for ${dir.distance.value}m`
 						})
@@ -277,37 +283,96 @@ function journeyDetails(loc) {
 	})
 }
 
-function displayJourneyDetails(sender, loc) {
+function displayJourneySummary(sender, loc) {
 
 	journeyDetails(loc)
 	.then(result => {
 
 		console.log("Result", result)
 
-		let option2 = result[1]
+		const summary = result.map(route => {
+
+			let routeDistance = 0,
+					routeDuration = 0,
+					routeCost = 0,
+					noOfTaxis = 0
+
+			route.map(leg => {
+
+				if(leg.mode === "Minibus taxi"){
+						noOfTaxis++
+						routeCost += leg.fare
+					}
+					routeDistance += leg.distance
+					routeDuration += leg.duration
+				})
+
+			return {
+				routeDistance,
+				routeDuration,
+				routeCost,
+				noOfTaxis
+			}
+		})
+
+		console.log("Summary", summary)
 
 		let messageData = {
-			"attachment": {
-	      "type":"template",
-	      "payload":{
-	        "template_type":"generic",
-	        "elements":[
-						{
-							"title":"First leg",
-							"subtitle": option2[0].mode + " for " +  option2[0].distance
-						},
-						{
-							"title":"Second leg",
-							"subtitle": "Take a " + option2[1].mode + " from " + option2[1].route + " and travel for " +  option2[1].distance
-						},
-						{
-							"title":"Last leg",
-							"subtitle": option2[2].mode + " for " +  option2[2].distance
-						}
-	        ]
-	      }
-	    }
-		}
+
+	    "attachment": {
+	        "type": "template",
+	        "payload": {
+            "template_type": "list",
+            "elements": [
+							{
+                    "title": "There are 3 possible routes to your destination",
+                    "image_url": "Logo.png",
+                    "subtitle": "Below are the summary details for all routes",
+							},
+              {
+                "title": `Route 2: Walk and use ${ summary[0].noOfTaxis } taxis`,
+                "subtitle": `Total distance: ${ summary[0].routeDistance/1000 } km
+								Total duration: ${ summary[0].routeDuration }mins
+								Total fare: R${ summary[1].routeCost }`,
+                "buttons": [
+									{
+				            "type":"postback",
+				            "title":"Route 1",
+				            "payload":"route1"
+				          }
+                ]
+              },
+              {
+                "title": `Route 2: Walk and use ${ summary[1].noOfTaxis } taxis`,
+                "subtitle": `Total distance: ${ summary[1].routeDistance/1000 } km
+								Total duration: ${ summary[1].routeDuration }mins
+								Total fare: R${ summary[1].routeCost }`,
+                "buttons": [
+									{
+				            "type":"postback",
+				            "title":"Route 2",
+				            "payload":"route2"
+				          }
+                ]
+              },
+              {
+                "title": `Route 3: Walk and use ${ summary[2].noOfTaxis } taxis`,
+                "subtitle": `Total distance: ${ summary[2].routeDistance/1000 } km
+								Total duration: ${ summary[2].routeDuration }mins
+								Total fare: R${ summary[2].routeCost }`,
+                "buttons": [
+									{
+				            "type":"postback",
+				            "title":"Route 3",
+				            "payload":"route3"
+				          }
+                ]
+              },
+          	]
+	      	}
+	    	}
+	  }
+
 		sendGenericMessage(sender, messageData)
 	})
 }
@@ -329,7 +394,8 @@ function sendRequest(sender, messageData) {
 	return new Promise((resolve, reject) => {
 		request({
 			url: 'https://graph.facebook.com/v2.6/me/messages',
-			qs: {access_token: process.env.PAGE_ACCESS_TOKEN},
+			// qs: {access_token: process.env.PAGE_ACCESS_TOKEN},
+			qs: {access_token: "EAAFePO2rmvwBAMQagXwh4uRZAMpNncMPbpnEDfi6euIiweaajflOE2DkMExFcVQYtA59MsfhWaxvfZAKnLHoJXUleZAoLpVGl1DbNe3gdUlnxZAZADxySk7VcwW5dD54q8M1VUlJwmLLHmlL6VlxR6qimjgp5UeHnYZBzstKbtXgZDZD"},
 			method: 'POST',
 			json: {
 				recipient: {id:sender},
