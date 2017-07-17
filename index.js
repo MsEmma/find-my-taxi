@@ -6,7 +6,7 @@ const bodyParser = require('body-parser')
 const request = require('request')
 const app = express()
 
-const journeyDetails = require('./wimtAPICall').journeyDetails
+const journeyDetails = require('./wimtApiCall').journeyDetails
 
 app.set('port', (process.env.PORT || 5000))
 
