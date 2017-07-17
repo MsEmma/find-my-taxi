@@ -6,6 +6,8 @@ const bodyParser = require('body-parser')
 const request = require('request')
 const app = express()
 
+const journeyDetails = require('./wimtAPICall').journeyDetails
+
 app.set('port', (process.env.PORT || 5000))
 
 // parse application/x-www-form-urlencoded
@@ -21,181 +23,95 @@ app.get('/', function (req, res) {
 
 // for facebook verification
 app.get('/webhook/', function (req, res) {
-	if (req.query['hub.verify_token'] === process.env.VERIFICATION_TOKEN) {
+	// if (req.query['hub.verify_token'] === process.env.VERIFICATION_TOKEN) {
+	if (req.query['hub.verify_token'] === "Emmalicious") {
 		res.send(req.query['hub.challenge'])
 	} else {
 		res.send('Error, wrong token')
 	}
 })
 
-// whereismytransport api call
-function wimtAPICall(loc) {
-
-	let long = loc.long
-	let lat = loc.lat
-
-	return new Promise((resolve, reject) => {
-
-		const CLIENT_ID = '709b10a8-342e-4637-8cd0-47d48107c31d';
-  	const CLIENT_SECRET = 'ShDVjohLxFrsiFxM7tNlVZ8QMnuENDAGjVHKpKNsxgE=';
-
-  	const clientOptions = {
-      method: "POST",
-      headers: "ACCEPT: application/json",
-      url: "https://identity.whereismytransport.com/connect/token",
-      form: {
-          client_id: CLIENT_ID,
-          client_secret: CLIENT_SECRET,
-          grant_type: "client_credentials",
-          scope: "transportapi:all"
-      }
-  	}
-
-  	request(clientOptions, function (error, response, body) {
-
-    	const TOKEN = JSON.parse(body).access_token;
-
-    	var body = {
-      	geometry: {
-        	type: "Multipoint",
-        	coordinates: [[long, lat], [18.5317533, -33.9456557]]
-      	}
-    	}
-
-	    var options = {
-	      method: "POST",
-	      headers: {
-	        "Accept": "application/json",
-	        "Content-Type": "application/json",
-	        "Authorization": "Bearer " + TOKEN
-	      },
-	      url: "https://platform.whereismytransport.com/api/journeys",
-	      body: JSON.stringify(body)
-	    }
-
-	    request(options, function (error, response, body) {
-	      return resolve(JSON.parse(body))
-	    })
-  	})
-	})
-}
-
 // to post data
 app.post('/webhook/', function (req, res) {
+
 	let myID = 300416860375397
 	let messaging_events = req.body.entry[0].messaging
+
 	messaging_events.forEach(function(event){
 		let sender = event.sender.id
+		// console.log(JSON.stringify(event));
 
 		if (event.message && event.message.attachments && event.message.attachments.length > 0 && sender != myID) {
+
 			let attachment = event.message.attachments[0];
       if (attachment.type === 'location') {
-				receivedLocation(event)
 				let text = event.message.attachments[0].title
 				let loc = attachment.payload.coordinates
-				displayJourneySummary(sender, loc)
+				displayJourney(sender, loc)
       }
     } else if (event.postback && event.postback.payload && sender != myID) {
-			receivedPostback(event)
+
 			let text= JSON.stringify(event.postback)
 			decideMessage(sender, text)
-    } else {
-      if (event.message && event.message.text && sender != myID) {
-				receivedMessage(event)
-				let text = event.message.text
-				decideMessage(sender, text)
-      }
+
+    } else if (event.message && event.message.text && sender != myID) {
+
+			let text = event.message.text
+			decideMessage(sender, text)
+
     }
 	})
 	res.sendStatus(200)
 })
 
-// Incoming events handling
-function receivedMessage(event) {
-  const senderID = event.sender.id;
-  const recipientID = event.recipient.id;
-  const timeOfMessage = event.timestamp;
-  const message = event.message;
-
-  console.log("Received message for user %d and page %d at %d with message:",
-    senderID, recipientID, timeOfMessage);
-  console.log(JSON.stringify(message));
-}
-
-function receivedPostback(event) {
-  const senderID = event.sender.id;
-  const recipientID = event.recipient.id;
-  const timeOfPostback = event.timestamp;
-  const payload = event.postback.payload;
-
-  console.log("Received postback for user %d and page %d with payload '%s' " +
-    "at %d", senderID, recipientID, payload, timeOfPostback);
-}
-
-function receivedLocation(event) {
-  const senderID = event.sender.id;
-  const recipientID = event.recipient.id;
-  const timeOfPostback = event.timestamp;
-  const payload = event.message.attachments[0].payload;
-
-  console.log("Received postback for user %d and page %d with payload '%s' " +
-    "at %d", senderID, recipientID, payload, timeOfPostback);
-}
 
 function decideMessage(sender, textInput) {
 	let text = textInput.toLowerCase()
 
 	if (text.includes("hi") || text.includes("get_started_payload")){
-		setTimeout(() => {
-    	sendTextMessage(sender, "Welcome to Find My Taxi 😄 We will give you directions for getting around using minibus taxis. 🚌")
-		}, 1000)
-		setTimeout(() => {
-    	sendTextMessage(sender, "Right now, we can only tell you about areas near Cape Town. 🇿🇦")
-		}, 2000)
-		setTimeout(() => {
-    	sendTextMessage(sender, "Give it a try! You can type “help” at any time, or “restart” to start again.")
-		}, 3000)
-		setTimeout(() => {
-    	sendTextMessage(sender, "Where are you going? Type the name of the taxi rank.")
-		}, 4000)
 
-	} else if (text.includes("lat")) {
+		const messages = [
+			"Welcome to Find My Taxi 😄 We will give you directions for getting around using minibus taxis. 🚌",
+		 	"Right now, we can only tell you about areas near Cape Town. 🇿🇦",
+		 	"Give it a try! You can type “help” at any time, or “restart” to start again.",
+		 	"Where are you going? Type the name of the taxi rank."
+		]
 
-    return displayJourneySummary(sender, loc)
+		return messages.map((message, i) => {
+			const interval = (i + 1) * 1000
+			setTimeout(() => { sendTextMessage(sender, message) }, interval)
+		})
 
-	} else if (text.includes("greenpoint")) {
+	} else if (text.includes("location")) {
 
-		setTimeout(() => {
-    	sendTextMessage(sender, "Okay, let’s get you to Greenpoint! ")
-		}, 1000)
-		setTimeout(() => {
-    	sendTextMessage(sender, "Where are you now?")
-		}, 2000)
-		setTimeout(() => {
-    	sendLocation(sender)
-		}, 3000)
+    displayJourney(sender, loc)
 
-	} else if (text.includes("langa")) {
+	} else if (text.includes("greenpoint") || text.includes("langa")) {
 
-		setTimeout(() => {
-    	sendTextMessage(sender, "Okay, let’s get you to Langa! ")
-		}, 1000)
-		setTimeout(() => {
-    	sendTextMessage(sender, "Where are you now?")
-		}, 2000)
-		setTimeout(() => {
-    	sendLocation(sender)
-		}, 3000)
+		const messages = [ `Okay, let’s get you to ${text.toUpperCase()}!`, "Where are you now?" ]
+
+		messages.map((message, i) => {
+			const interval = (i + 1) * 1000
+			setTimeout(() => { sendTextMessage(sender, message) }, interval)
+		})
+
+		setTimeout(() => { sendLocation(sender) }, 3000)
 
 	} else if (text.includes("route")) {
 
-    sendTextMessage(sender, "Happy travels")
+		const journey = getJourneyOfSender(sender)
+		// console.log('stored journey', journey)
 
+		if(text.includes("route1")){
+			console.log("Route 1 details", journey[0]);
+		}
+		else if(text.includes("route2")){
+			console.log("Route 2 details", journey[1]);
+		}
+		else if(text.includes("route3")){
+			console.log("Route 3 details", journey[2]);
+		}
 	}
-	// else {
-	// 	sendTextMessage(sender, "Where would you like to go?")
-	// 	sendButtonMessage(sender, "Choose your destination")
-	// }
 }
 
 function sendTextMessage(sender, text) {
@@ -207,87 +123,38 @@ function sendGenericMessage(sender, messageData) {
 	sendRequest(sender, messageData)
 }
 
-function sendButtonMessage(sender, text) {
+function sendLocation(sender) {
 	let messageData = {
-		"attachment":{
-      "type":"template",
-      "payload":{
-        "template_type":"button",
-        "text": text,
-        "buttons":[
-          {
-            "type":"postback",
-            "title":"Langa",
-            "payload":"langa"
-          },
-          {
-            "type":"postback",
-            "title":"Greenpoint",
-            "payload":"greenpoint"
-          }
-        ]
+    "text":"Please share your location:",
+    "quick_replies":[
+      {
+        "content_type":"location"
       }
-    }
-	}
+    ]
+  }
 	sendRequest(sender, messageData)
 }
 
-// For sending image attachment
-function sendImageMessage(sender, imageURL) {
-	let messageData = {
-		"attachment":{
-      "type":"image",
-      "payload":{
-        "url": imageURL
-      }
-    }
+const journeysBySender = {}
+
+function storeJourneyOfSender(senderId, journey) {
+	journeysBySender[senderId] = journey
+	return journey
+}
+
+function getJourneyOfSender(senderId) {
+	const journey = journeysBySender[senderId]
+	if (!journey) {
+		throw new Error('journey for senderId not found: ' + senderId)
 	}
-	sendRequest(sender, messageData)
+	return journey
 }
 
-function journeyDetails(loc) {
-
-	return wimtAPICall(loc)
-	.then(result => {
-		return result.itineraries.map(itinerary => {
-			return itinerary.legs
-		})
-	})
-	.then(legs => {
-		return legs.map(leg => {
-			return leg.map(lp => {
-				if(lp.type === "Transit") {
-					return {
-						mode: "Minibus taxi",
-						distance: lp.distance.value,
-						route: lp.line.name,
-						fare: lp.fare.cost.amount,
-						duration: Math.round(lp.duration/60)
-					}
-				} else {
-					return {
-						mode: lp.type,
-						distance: lp.distance.value,
-						duration: Math.round(lp.duration/60),
-						directions: lp.directions.map(dir =>{
-							return `${dir.instruction} for ${dir.distance.value}m`
-						})
-					}
-				}
-			})
-		})
-	})
-	.then(l => {
-		return l
-	})
-}
-
-function displayJourneySummary(sender, loc) {
+function displayJourney(sender, loc) {
 
 	journeyDetails(loc)
+	.then(result => storeJourneyOfSender(sender, result))
 	.then(result => {
-
-		console.log("Result", result)
 
 		const summary = result.map(route => {
 
@@ -306,15 +173,13 @@ function displayJourneySummary(sender, loc) {
 					routeDuration += leg.duration
 				})
 
-			return {
-				routeDistance,
-				routeDuration,
-				routeCost,
-				noOfTaxis
-			}
+				return {
+					routeDistance,
+					routeDuration,
+					routeCost,
+					noOfTaxis
+				}
 		})
-
-		console.log("Summary", summary)
 
 		let messageData = {
 
@@ -325,7 +190,7 @@ function displayJourneySummary(sender, loc) {
             "elements": [
 							{
                     "title": "There are 3 possible routes to your destination",
-                    "image_url": "Logo.png",
+                    "image_url": "https://fb-s-d-a.akamaihd.net/h-ak-fbx/v/t1.0-9/17103294_300759917007758_1443368003349594057_n.jpg?oh=e67a96ec7acb9ff0e01fc5612402f3eb&oe=5A08F2F2&__gda__=1509960767_b79aca0c3386cbb087cd592f91845532",
                     "subtitle": "Below are the summary details for all routes",
 							},
               {
@@ -370,30 +235,18 @@ function displayJourneySummary(sender, loc) {
           	]
 	      	}
 	    	}
-	  }
+		}
 
 		sendGenericMessage(sender, messageData)
 	})
-}
-
-function sendLocation(sender) {
-	let messageData = {
-    "text":"Please share your location:",
-    "quick_replies":[
-      {
-        "content_type":"location"
-      }
-    ]
-  }
-	console.log("Response", messageData);
-	sendRequest(sender, messageData)
 }
 
 function sendRequest(sender, messageData) {
 	return new Promise((resolve, reject) => {
 		request({
 			url: 'https://graph.facebook.com/v2.6/me/messages',
-			qs: {access_token: process.env.PAGE_ACCESS_TOKEN},
+			// qs: {access_token: process.env.PAGE_ACCESS_TOKEN},
+			qs: {access_token: "EAAFePO2rmvwBAMQagXwh4uRZAMpNncMPbpnEDfi6euIiweaajflOE2DkMExFcVQYtA59MsfhWaxvfZAKnLHoJXUleZAoLpVGl1DbNe3gdUlnxZAZADxySk7VcwW5dD54q8M1VUlJwmLLHmlL6VlxR6qimjgp5UeHnYZBzstKbtXgZDZD"},
 			method: 'POST',
 			json: {
 				recipient: {id:sender},
