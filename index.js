@@ -7,6 +7,7 @@ const request = require('request')
 const app = express()
 
 const journeyDetails = require('./wimtApiCall').journeyDetails
+const stops = require('./stops')
 
 app.set('port', (process.env.PORT || 5000))
 
@@ -98,17 +99,37 @@ function decideMessage(sender, textInput) {
 
 	} else if (text.includes("route")) {
 
-		const journey = getJourneyOfSender(sender)
+		const routes = getJourneyOfSender(sender)
 		// console.log('stored journey', journey)
 
+		const decideMode = l => {
+			if(l.mode === "Walking"){
+				sendTextMessage(sender, `Walk ${(l.distance/1000).toFixed(2)} km for ${l.duration} minutes`)
+			} else {
+				sendTextMessage(sender,
+				`Take a minibus taxi from ${l.route}, travel for ${(l.distance/1000).toFixed(2)} km in approx ${l.duration} minutes and trip cost is R${l.fare}`)
+			}
+		}
+
+		const routeDetails = route => {
+
+			return route.map((l, i) => {
+				const interval = (i + 1) * 1000
+				setTimeout(() => decideMode(l), interval)
+			})
+		}
+
 		if(text.includes("route1")){
-			console.log("Route 1 details", journey[0]);
+			// console.log("Route 1 details", routes[0])
+			return routeDetails(routes[0])
 		}
 		else if(text.includes("route2")){
-			console.log("Route 2 details", journey[1]);
+			// console.log("Route 2 details", routes[1])
+			return routeDetails(routes[1])
 		}
 		else if(text.includes("route3")){
-			console.log("Route 3 details", journey[2]);
+			// console.log("Route 3 details", routes[2])
+			return routeDetails(routes[2])
 		}
 	}
 }
