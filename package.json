@@ -12,6 +12,7 @@
     "body-parser": "^1.15.0",
     "express": "^4.13.4",
     "express-session": "^1.15.2",
+    "ramda": "^0.24.1",
     "request": "^2.71.0"
   }
 }

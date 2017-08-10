@@ -4,9 +4,11 @@ const express = require('express')
 const session = require('express-session')
 const bodyParser = require('body-parser')
 const request = require('request')
+const R = require('ramda')
 const app = express()
 
-const journeyDetails = require('./wimtApiCall').journeyDetails
+const journeyDetails = require('./getJourneys').journeyDetails
+// const getStops = require('./getStops')
 const stops = require('./stops')
 
 app.set('port', (process.env.PORT || 5000))
@@ -24,7 +26,8 @@ app.get('/', function (req, res) {
 
 // for facebook verification
 app.get('/webhook/', function (req, res) {
-	if (req.query['hub.verify_token'] === process.env.VERIFICATION_TOKEN) {
+	// if (req.query['hub.verify_token'] === process.env.VERIFICATION_TOKEN) {
+	if (req.query['hub.verify_token'] === "Emmalicious") {
 		res.send(req.query['hub.challenge'])
 	} else {
 		res.send('Error, wrong token')
@@ -37,33 +40,49 @@ app.post('/webhook/', function (req, res) {
 	let myID = 300416860375397
 	let messaging_events = req.body.entry[0].messaging
 
-	messaging_events.forEach(function(event){
+	messaging_events.map(event => {
 		let sender = event.sender.id
-		// console.log(JSON.stringify(event));
 
 		if (event.message && event.message.attachments && event.message.attachments.length > 0 && sender != myID) {
 
-			let attachment = event.message.attachments[0];
-      if (attachment.type === 'location') {
+			let attachment = event.message.attachments[0]
+			if (attachment.type === 'location') {
 				let text = event.message.attachments[0].title
-				let loc = attachment.payload.coordinates
-				displayJourney(sender, loc)
-      }
-    } else if (event.postback && event.postback.payload && sender != myID) {
+				let location = attachment.payload.coordinates
+				let destination = getSenderDest(sender)
+
+				displayJourney(sender, location, destination)
+			}
+      		
+		} else if (event.postback && event.postback.payload && sender != myID) {
 
 			let text= JSON.stringify(event.postback)
 			decideMessage(sender, text)
 
-    } else if (event.message && event.message.text && sender != myID) {
+		} else if (event.message && event.message.text && sender != myID) {
 
 			let text = event.message.text
 			decideMessage(sender, text)
 
-    }
+		}
 	})
 	res.sendStatus(200)
 })
 
+let senderDest = {}
+
+function storeSenderDest(senderId, dest) {
+	senderDest[senderId] = dest
+	return dest
+}
+
+function getSenderDest(senderId) {
+	const dest = senderDest[senderId]
+	if (!dest) {
+		throw new Error('dest for senderId not found: ' + senderId)
+	}
+	return dest
+}
 
 function decideMessage(sender, textInput) {
 	let text = textInput.toLowerCase()
@@ -82,24 +101,9 @@ function decideMessage(sender, textInput) {
 			setTimeout(() => { sendTextMessage(sender, message) }, interval)
 		})
 
-	} else if (text.includes("location")) {
-
-    displayJourney(sender, loc)
-
-	} else if (text.includes("greenpoint") || text.includes("langa")) {
-
-		const messages = [ `Okay, let’s get you to ${text.toUpperCase()}!`, "Where are you now?" ]
-
-		messages.map((message, i) => {
-			const interval = (i + 1) * 1000
-			setTimeout(() => { sendTextMessage(sender, message) }, interval)
-		})
-
-		setTimeout(() => { sendLocation(sender) }, 3000)
-
 	} else if (text.includes("route")) {
 
-		const routes = getJourneyOfSender(sender)
+		const routes = getSenderJourney(sender)
 		// console.log('stored journey', journey)
 
 		const decideMode = l => {
@@ -120,16 +124,40 @@ function decideMessage(sender, textInput) {
 		}
 
 		if(text.includes("route1")){
-			// console.log("Route 1 details", routes[0])
+			console.log("Route 1 details", routes[0])
 			return routeDetails(routes[0])
 		}
 		else if(text.includes("route2")){
-			// console.log("Route 2 details", routes[1])
+			console.log("Route 2 details", routes[1])
 			return routeDetails(routes[1])
 		}
 		else if(text.includes("route3")){
-			// console.log("Route 3 details", routes[2])
+			console.log("Route 3 details", routes[2])
 			return routeDetails(routes[2])
+		}
+
+	} else if (text.includes("to")) {
+
+		let dest = text.replace("to ","")
+		const getStop = stops.filter(stop => {	
+			let name = stop.name.toLowerCase()
+			return name === dest
+		})
+
+		if(!R.isEmpty(getStop)) {
+
+			storeSenderDest(sender, getStop[0])
+			const messages = [`Okay, let’s get you to ${dest.toUpperCase()}!`, "Where are you now?"]
+
+			messages.map((message, i) => {
+				const interval = (i + 1) * 1000
+				setTimeout(() => { sendTextMessage(sender, message) }, interval)
+			})
+
+			setTimeout(() => { sendLocation(sender) }, 3000)
+			
+		} else {
+			sendTextMessage(sender, "Stop cannot be found, please type a valid destination")
 		}
 	}
 }
@@ -157,12 +185,12 @@ function sendLocation(sender) {
 
 const journeysBySender = {}
 
-function storeJourneyOfSender(senderId, journey) {
+function storeSenderJourney(senderId, journey) {
 	journeysBySender[senderId] = journey
 	return journey
 }
 
-function getJourneyOfSender(senderId) {
+function getSenderJourney(senderId) {
 	const journey = journeysBySender[senderId]
 	if (!journey) {
 		throw new Error('journey for senderId not found: ' + senderId)
@@ -170,18 +198,18 @@ function getJourneyOfSender(senderId) {
 	return journey
 }
 
-function displayJourney(sender, loc) {
+function displayJourney(sender, loc, dest) {
 
-	journeyDetails(loc)
-	.then(result => storeJourneyOfSender(sender, result))
+	journeyDetails(loc, dest)
+	.then(result => storeSenderJourney(sender, result))
 	.then(result => {
 
 		const summary = result.map(route => {
 
 			let routeDistance = 0,
-					routeDuration = 0,
-					routeCost = 0,
-					noOfTaxis = 0
+				routeDuration = 0,
+				routeCost = 0,
+				noOfTaxis = 0
 
 			route.map(leg => {
 
@@ -191,69 +219,69 @@ function displayJourney(sender, loc) {
 					}
 					routeDistance += leg.distance
 					routeDuration += leg.duration
-				})
+			})
 
-				return {
-					routeDistance,
-					routeDuration,
-					routeCost,
-					noOfTaxis
-				}
+			return {
+				routeDistance,
+				routeDuration,
+				routeCost,
+				noOfTaxis
+			}
 		})
 
 		let messageData = {
 
-	    "attachment": {
-	        "type": "template",
-	        "payload": {
-            "template_type": "list",
-            "elements": [
+			"attachment": {
+				"type": "template",
+				"payload": {
+				"template_type": "list",
+				"elements": [
+					{
+						"title": "There are 3 possible routes to your destination",
+						"image_url": "https://fb-s-d-a.akamaihd.net/h-ak-fbx/v/t1.0-9/17103294_300759917007758_1443368003349594057_n.jpg?oh=e67a96ec7acb9ff0e01fc5612402f3eb&oe=5A08F2F2&__gda__=1509960767_b79aca0c3386cbb087cd592f91845532",
+						"subtitle": "Below are the summary details for all routes",
+					},
+					{
+						"title": `Route 2: Walk and use ${ summary[0].noOfTaxis } taxis`,
+						"subtitle": `Total distance: ${ summary[0].routeDistance/1000 } km
+									Total duration: ${ summary[0].routeDuration }mins
+									Total fare: R${ summary[1].routeCost }`,
+						"buttons": [
 							{
-                    "title": "There are 3 possible routes to your destination",
-                    "image_url": "https://fb-s-d-a.akamaihd.net/h-ak-fbx/v/t1.0-9/17103294_300759917007758_1443368003349594057_n.jpg?oh=e67a96ec7acb9ff0e01fc5612402f3eb&oe=5A08F2F2&__gda__=1509960767_b79aca0c3386cbb087cd592f91845532",
-                    "subtitle": "Below are the summary details for all routes",
-							},
-              {
-                "title": `Route 2: Walk and use ${ summary[0].noOfTaxis } taxis`,
-                "subtitle": `Total distance: ${ summary[0].routeDistance/1000 } km
-								Total duration: ${ summary[0].routeDuration }mins
-								Total fare: R${ summary[1].routeCost }`,
-                "buttons": [
-									{
-				            "type":"postback",
-				            "title":"Route 1",
-				            "payload":"route1"
-				          }
-                ]
-              },
-              {
-                "title": `Route 2: Walk and use ${ summary[1].noOfTaxis } taxis`,
-                "subtitle": `Total distance: ${ summary[1].routeDistance/1000 } km
-								Total duration: ${ summary[1].routeDuration }mins
-								Total fare: R${ summary[1].routeCost }`,
-                "buttons": [
-									{
-				            "type":"postback",
-				            "title":"Route 2",
-				            "payload":"route2"
-				          }
-                ]
-              },
-              {
-                "title": `Route 3: Walk and use ${ summary[2].noOfTaxis } taxis`,
-                "subtitle": `Total distance: ${ summary[2].routeDistance/1000 } km
-								Total duration: ${ summary[2].routeDuration }mins
-								Total fare: R${ summary[2].routeCost }`,
-                "buttons": [
-									{
-				            "type":"postback",
-				            "title":"Route 3",
-				            "payload":"route3"
-				          }
-                ]
-              },
-          	]
-	      	}
+								"type":"postback",
+								"title":"Route 1",
+								"payload":"route1"
+							}
+						]
+					},
+					{
+						"title": `Route 2: Walk and use ${ summary[1].noOfTaxis } taxis`,
+						"subtitle": `Total distance: ${ summary[1].routeDistance/1000 } km
+									Total duration: ${ summary[1].routeDuration }mins
+									Total fare: R${ summary[1].routeCost }`,
+						"buttons": [
+							{
+								"type":"postback",
+								"title":"Route 2",
+								"payload":"route2"
+							}
+						]
+					},
+					{
+						"title": `Route 3: Walk and use ${ summary[2].noOfTaxis } taxis`,
+						"subtitle": `Total distance: ${ summary[2].routeDistance/1000 } km
+									Total duration: ${ summary[2].routeDuration }mins
+									Total fare: R${ summary[2].routeCost }`,
+						"buttons": [
+							{
+								"type":"postback",
+								"title":"Route 3",
+								"payload":"route3"
+							}
+						]
+					},
+				]
+				}
 	    	}
 		}
 
@@ -265,7 +293,8 @@ function sendRequest(sender, messageData) {
 	return new Promise((resolve, reject) => {
 		request({
 			url: 'https://graph.facebook.com/v2.6/me/messages',
-			qs: {access_token: process.env.PAGE_ACCESS_TOKEN},
+			// qs: {access_token: process.env.PAGE_ACCESS_TOKEN},
+			qs: { access_token: "EAAFePO2rmvwBAMQagXwh4uRZAMpNncMPbpnEDfi6euIiweaajflOE2DkMExFcVQYtA59MsfhWaxvfZAKnLHoJXUleZAoLpVGl1DbNe3gdUlnxZAZADxySk7VcwW5dD54q8M1VUlJwmLLHmlL6VlxR6qimjgp5UeHnYZBzstKbtXgZDZD" },
 			method: 'POST',
 			json: {
 				recipient: {id:sender},
