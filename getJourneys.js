@@ -27,7 +27,7 @@ function getJourneys(loc, dest) {
 
 			const TOKEN = JSON.parse(body).access_token;
 
-			const body = {
+			const params = {
 				geometry: {
 					type: "Multipoint",
 					coordinates: [[loc.long, loc.lat], dest.coordinates]
@@ -42,7 +42,7 @@ function getJourneys(loc, dest) {
 					"Authorization": "Bearer " + TOKEN
 				},
 				url: "https://platform.whereismytransport.com/api/journeys",
-				body: JSON.stringify(body)
+				body: JSON.stringify(params)
 			}
 
 			request(options, function (error, response, body) {

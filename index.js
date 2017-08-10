@@ -26,8 +26,7 @@ app.get('/', function (req, res) {
 
 // for facebook verification
 app.get('/webhook/', function (req, res) {
-	// if (req.query['hub.verify_token'] === process.env.VERIFICATION_TOKEN) {
-	if (req.query['hub.verify_token'] === "Emmalicious") {
+	if (req.query['hub.verify_token'] === process.env.VERIFICATION_TOKEN) {
 		res.send(req.query['hub.challenge'])
 	} else {
 		res.send('Error, wrong token')
@@ -48,10 +47,10 @@ app.post('/webhook/', function (req, res) {
 			let attachment = event.message.attachments[0]
 			if (attachment.type === 'location') {
 				let text = event.message.attachments[0].title
-				let location = attachment.payload.coordinates
-				let destination = getSenderDest(sender)
+				let loc = attachment.payload.coordinates
+				let dest = getSenderDest(sender)
 
-				displayJourney(sender, location, destination)
+				displayJourney(sender, loc, dest)
 			}
       		
 		} else if (event.postback && event.postback.payload && sender != myID) {
@@ -293,8 +292,7 @@ function sendRequest(sender, messageData) {
 	return new Promise((resolve, reject) => {
 		request({
 			url: 'https://graph.facebook.com/v2.6/me/messages',
-			// qs: {access_token: process.env.PAGE_ACCESS_TOKEN},
-			qs: { access_token: "EAAFePO2rmvwBAMQagXwh4uRZAMpNncMPbpnEDfi6euIiweaajflOE2DkMExFcVQYtA59MsfhWaxvfZAKnLHoJXUleZAoLpVGl1DbNe3gdUlnxZAZADxySk7VcwW5dD54q8M1VUlJwmLLHmlL6VlxR6qimjgp5UeHnYZBzstKbtXgZDZD" },
+			qs: {access_token: process.env.PAGE_ACCESS_TOKEN},
 			method: 'POST',
 			json: {
 				recipient: {id:sender},
