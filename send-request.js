@@ -1,12 +1,11 @@
 const request = require('request')
 
 module.exports = (sender, messageData) =>  {
-  
+
 	return new Promise((resolve, reject) => {
 		request({
 			url: 'https://graph.facebook.com/v2.6/me/messages',
-			// qs: {access_token: process.env.PAGE_ACCESS_TOKEN},
-			qs: { access_token: "EAAFePO2rmvwBAMQagXwh4uRZAMpNncMPbpnEDfi6euIiweaajflOE2DkMExFcVQYtA59MsfhWaxvfZAKnLHoJXUleZAoLpVGl1DbNe3gdUlnxZAZADxySk7VcwW5dD54q8M1VUlJwmLLHmlL6VlxR6qimjgp5UeHnYZBzstKbtXgZDZD" },
+			qs: {access_token: process.env.PAGE_ACCESS_TOKEN},
 			method: 'POST',
 			json: {
 				recipient: {id:sender},
