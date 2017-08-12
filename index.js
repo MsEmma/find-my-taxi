@@ -7,8 +7,9 @@ const request = require('request')
 const R = require('ramda')
 const app = express()
 
-const journeyDetails = require('./getJourneys').journeyDetails
-// const getStops = require('./getStops')
+// const getStops = require('./get-stops')
+const journeyDetails = require('./get-journeys').journeyDetails
+const sendRequest = require('./send-request')
 const stops = require('./stops')
 
 app.set('port', (process.env.PORT || 5000))
@@ -26,7 +27,8 @@ app.get('/', function (req, res) {
 
 // for facebook verification
 app.get('/webhook/', function (req, res) {
-	if (req.query['hub.verify_token'] === process.env.VERIFICATION_TOKEN) {
+	// if (req.query['hub.verify_token'] === process.env.VERIFICATION_TOKEN) {
+	if (req.query['hub.verify_token'] === "Emmalicious") {
 		res.send(req.query['hub.challenge'])
 	} else {
 		res.send('Error, wrong token')
@@ -36,31 +38,32 @@ app.get('/webhook/', function (req, res) {
 // to post data
 app.post('/webhook/', function (req, res) {
 
-	let myID = 300416860375397
-	let messaging_events = req.body.entry[0].messaging
+	const myID = 300416860375397
+	const messaging_events = req.body.entry[0].messaging
 
 	messaging_events.map(event => {
-		let sender = event.sender.id
+		const sender = event.sender.id
 
 		if (event.message && event.message.attachments && event.message.attachments.length > 0 && sender != myID) {
 
-			let attachment = event.message.attachments[0]
+			const attachment = event.message.attachments[0]
 			if (attachment.type === 'location') {
-				let text = event.message.attachments[0].title
-				let loc = attachment.payload.coordinates
-				let dest = getSenderDest(sender)
+				const loc = attachment.payload.coordinates
+				const dest = getSenderDest(sender)
 
 				displayJourney(sender, loc, dest)
 			}
       		
-		} else if (event.postback && event.postback.payload && sender != myID) {
+		} 
+		if (event.postback && event.postback.payload && sender != myID) {
 
-			let text= JSON.stringify(event.postback)
+			const text= JSON.stringify(event.postback)
 			decideMessage(sender, text)
 
-		} else if (event.message && event.message.text && sender != myID) {
+		} 
+		if (event.message && event.message.text && sender != myID) {
 
-			let text = event.message.text
+			const text = event.message.text
 			decideMessage(sender, text)
 
 		}
@@ -86,7 +89,7 @@ function getSenderDest(senderId) {
 function decideMessage(sender, textInput) {
 	let text = textInput.toLowerCase()
 
-	if (text.includes("hi") || text.includes("get_started_payload")){
+	if (text === "hi" || text.includes("get_started_payload")){
 
 		const messages = [
 			"Welcome to Find My Taxi 😄 We will give you directions for getting around using minibus taxis. 🚌",
@@ -105,9 +108,9 @@ function decideMessage(sender, textInput) {
 		const routes = getSenderJourney(sender)
 		// console.log('stored journey', journey)
 
-		const decideMode = l => {
+		const checkMode = l => {
 			if(l.mode === "Walking"){
-				sendTextMessage(sender, `Walk ${(l.distance/1000).toFixed(2)} km for ${l.duration} minutes`)
+				sendTextMessage(sender, `Walk ${(l.distance/1000).toFixed(2)} km for ${l.duration} minutes to the taxi stop then`)
 			} else {
 				sendTextMessage(sender,
 				`Take a minibus taxi from ${l.route}, travel for ${(l.distance/1000).toFixed(2)} km in approx ${l.duration} minutes and trip cost is R${l.fare}`)
@@ -118,35 +121,34 @@ function decideMessage(sender, textInput) {
 
 			return route.map((l, i) => {
 				const interval = (i + 1) * 1000
-				setTimeout(() => decideMode(l), interval)
+				setTimeout(() => checkMode(l), interval)
 			})
 		}
 
 		if(text.includes("route1")){
-			console.log("Route 1 details", routes[0])
+			// console.log("Route 1 details", routes[0])
 			return routeDetails(routes[0])
-		}
+		} 
 		else if(text.includes("route2")){
-			console.log("Route 2 details", routes[1])
+			// console.log("Route 2 details", routes[1])
 			return routeDetails(routes[1])
 		}
 		else if(text.includes("route3")){
-			console.log("Route 3 details", routes[2])
+			// console.log("Route 3 details", routes[2])
 			return routeDetails(routes[2])
 		}
 
-	} else if (text.includes("to")) {
+	} else {
 
-		let dest = text.replace("to ","")
 		const getStop = stops.filter(stop => {	
 			let name = stop.name.toLowerCase()
-			return name === dest
+			return name === text
 		})
 
 		if(!R.isEmpty(getStop)) {
 
 			storeSenderDest(sender, getStop[0])
-			const messages = [`Okay, let’s get you to ${dest.toUpperCase()}!`, "Where are you now?"]
+			const messages = [`Okay, let’s get you to ${text.toUpperCase()}!`, "Where are you now?"]
 
 			messages.map((message, i) => {
 				const interval = (i + 1) * 1000
@@ -182,15 +184,15 @@ function sendLocation(sender) {
 	sendRequest(sender, messageData)
 }
 
-const journeysBySender = {}
+const senderJourney = {}
 
 function storeSenderJourney(senderId, journey) {
-	journeysBySender[senderId] = journey
+	senderJourney[senderId] = journey
 	return journey
 }
 
 function getSenderJourney(senderId) {
-	const journey = journeysBySender[senderId]
+	const journey = senderJourney[senderId]
 	if (!journey) {
 		throw new Error('journey for senderId not found: ' + senderId)
 	}
@@ -283,34 +285,7 @@ function displayJourney(sender, loc, dest) {
 				}
 	    	}
 		}
-
 		sendGenericMessage(sender, messageData)
-	})
-}
-
-function sendRequest(sender, messageData) {
-	return new Promise((resolve, reject) => {
-		request({
-			url: 'https://graph.facebook.com/v2.6/me/messages',
-			qs: {access_token: process.env.PAGE_ACCESS_TOKEN},
-			method: 'POST',
-			json: {
-				recipient: {id:sender},
-				message: messageData,
-			}
-		}, (error, response, body) =>
-		{
-			if (error) {
-				console.log('Error sending messages: ', response.error)
-				return reject(response.error)
-			} else if (response.body.error) {
-				console.log('Response body Error: ', response.body.error)
-				return reject(response.body.error)
-			}
-
-			console.log("Message sent successfully to " + sender);
-			return resolve(response);
-		})
 	})
 }
 
