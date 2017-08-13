@@ -53,14 +53,12 @@ app.post('/webhook/', function (req, res) {
 				displayJourney(sender, loc, dest)
 			}
       		
-		} 
-		if (event.postback && event.postback.payload && sender != myID) {
+		} else if (event.postback && event.postback.payload && sender != myID) {
 
 			const text= JSON.stringify(event.postback)
 			decideMessage(sender, text)
 
-		} 
-		if (event.message && event.message.text && sender != myID) {
+		} else if (event.message && event.message.text && sender != myID) {
 
 			const text = event.message.text
 			decideMessage(sender, text)
