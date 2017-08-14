@@ -79,7 +79,6 @@ app.use(function (err, req, res, next) {
 let senderDest = {}
 
 function storeSenderDest(senderId, dest) {
-	console.log('storeSenderDest', senderId)
 	senderDest[senderId] = dest
 	return dest
 }
@@ -90,6 +89,13 @@ function getSenderDest(senderId) {
 		throw new Error('dest for senderId not found: ' + senderId)
 	}
 	return dest
+}
+
+function sendTextMessages(sender, messages) {
+	messages.map((message, i) => {
+		const interval = (i + 1) * 1000
+		setTimeout(() => { sendTextMessage(sender, message) }, interval)
+	})
 }
 
 function decideMessage(sender, textInput) {
@@ -104,15 +110,11 @@ function decideMessage(sender, textInput) {
 		 	"Where are you going? Type the name of the taxi rank."
 		]
 
-		return messages.map((message, i) => {
-			const interval = (i + 1) * 1000
-			setTimeout(() => { sendTextMessage(sender, message) }, interval)
-		})
+		return sendTextMessages(sender, messages)
 
 	} else if (text.includes("route")) {
 
 		const routes = getSenderJourney(sender)
-		// console.log('stored journey', journey)
 
 		const sendLegInfo = (l, nextL) => {
 			if(l.mode === "Walking") {
@@ -123,8 +125,11 @@ function decideMessage(sender, textInput) {
 				}
 				sendTextMessage(sender, msg)
 			} else {
-				sendTextMessage(sender,
-				`Take a minibus taxi from ${l.route}, travel for ${(l.distance/1000).toFixed(2)} km in approx ${l.duration} minutes and trip cost is R${l.fare}`)
+				let msg = `Take a minibus taxi from ${l.route}, travel for ${(l.distance / 1000).toFixed(2)} km in approx ${l.duration} minutes and trip cost is R${l.fare}`
+				if (nextL) {
+					msg += " then"
+				}
+				sendTextMessage(sender, msg)
 			}
 		}
 
@@ -136,23 +141,14 @@ function decideMessage(sender, textInput) {
 			})
 		}
 
-		if(text.includes("route1")){
-			// console.log("Route 1 details", routes[0])
-			return routeDetails(routes[0])
-		} 
-		else if(text.includes("route2")){
-			// console.log("Route 2 details", routes[1])
-			return routeDetails(routes[1])
-		}
-		else if(text.includes("route3")){
-			// console.log("Route 3 details", routes[2])
-			return routeDetails(routes[2])
-		}
+		if(text.includes("route1")) return routeDetails(routes[0]) 
+		else if(text.includes("route2")) return routeDetails(routes[1])
+		else if(text.includes("route3")) return routeDetails(routes[2])
 
 	} else {
 
 		const getStop = stops.filter(stop => {	
-			let name = stop.name.toLowerCase()
+			const name = stop.name.toLowerCase()
 			return name === text
 		})
 
@@ -161,14 +157,8 @@ function decideMessage(sender, textInput) {
 
 			storeSenderDest(sender, getStop[0])
 			const messages = [`Okay, let’s get you to ${text.toUpperCase()}!`, "Where are you now?"]
-
-			messages.map((message, i) => {
-				const interval = (i + 1) * 1000
-				setTimeout(() => { sendTextMessage(sender, message) }, interval)
-			})
-
-			setTimeout(() => { sendLocation(sender) }, 3000)
-			
+			sendTextMessages(sender, messages)
+			setTimeout(() => { sendLocation(sender) }, 3000)			
 		} else {
 			sendTextMessage(sender, "Stop cannot be found, please type a valid destination")
 		}
