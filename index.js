@@ -5,6 +5,7 @@ const session = require('express-session')
 const bodyParser = require('body-parser')
 const request = require('request')
 const R = require('ramda')
+const debug = require('debug')('fmt')
 const app = express()
 
 // const getStops = require('./get-stops')
@@ -34,6 +35,7 @@ app.get('/webhook/', function (req, res) {
 	if (req.query['hub.verify_token'] === "Iphitaksi") {
 		res.send(req.query['hub.challenge'])
 	} else {
+		debug('wrong token')
 		res.send('Error, wrong token')
 	}
 })
@@ -47,7 +49,8 @@ app.post('/webhook/', function (req, res) {
 		const messaging_events = data.messaging
 		messaging_events.map(event => {
 			const sender = event.sender.id
-			
+			req.sender = sender
+
 			if (event.message && event.message.attachments && event.message.attachments.length > 0 && sender != myID) {
 				const attachment = event.message.attachments[0]
 				if (attachment.type === 'location') {
@@ -67,9 +70,18 @@ app.post('/webhook/', function (req, res) {
 	res.sendStatus(200)
 })
 
+app.use(function (err, req, res, next) {
+	console.error(err.stack)
+	if (req.sender) {
+		sendTextMessage(req.sender, 'Oops, an internal error occurred: ' + err.message)
+	}
+	res.status(200).send('Something broke!')
+})
+
 let senderDest = {}
 
 function storeSenderDest(senderId, dest) {
+	console.log('storeSenderDest', senderId)
 	senderDest[senderId] = dest
 	return dest
 }
@@ -104,20 +116,26 @@ function decideMessage(sender, textInput) {
 		const routes = getSenderJourney(sender)
 		// console.log('stored journey', journey)
 
-		const checkMode = l => {
-			if(l.mode === "Walking"){
-				sendTextMessage(sender, `Walk ${(l.distance/1000).toFixed(2)} km for ${l.duration} minutes`)
+		const sendLegInfo = (l, nextL) => {
+			if(l.mode === "Walking") {
+				let msg = `Walk ${(l.distance / 1000).toFixed(2)} km for ${l.duration} minutes`
+				if (nextL) {
+					const dest = nextL.route.match(/^(.*) to /)[1]
+					msg += ` to ${ dest }`
+				}
+				sendTextMessage(sender, msg)
 			} else {
+			// if(l.mode === "Minibus taxi"){
 				sendTextMessage(sender,
 				`Take a minibus taxi from ${l.route}, travel for ${(l.distance/1000).toFixed(2)} km in approx ${l.duration} minutes and trip cost is R${l.fare}`)
 			}
 		}
 
 		const routeDetails = route => {
-
 			return route.map((l, i) => {
 				const interval = (i + 1) * 1000
-				setTimeout(() => checkMode(l), interval)
+				const nextL = i + 1 < route.length ? route[i+1] : undefined
+				setTimeout(() => sendLegInfo(l, nextL), interval)
 			})
 		}
 
@@ -141,6 +159,7 @@ function decideMessage(sender, textInput) {
 			return name === text
 		})
 
+		debug('getStop', getStop)
 		if(!R.isEmpty(getStop)) {
 
 			storeSenderDest(sender, getStop[0])
