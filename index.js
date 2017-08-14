@@ -31,11 +31,9 @@ app.get('/', function (req, res) {
 
 // for facebook verification
 app.get('/webhook/', function (req, res) {
-	// if (req.query['hub.verify_token'] === process.env.VERIFICATION_TOKEN) {
-	if (req.query['hub.verify_token'] === "Iphitaksi") {
+	if (req.query['hub.verify_token'] === process.env.VERIFICATION_TOKEN) {
 		res.send(req.query['hub.challenge'])
 	} else {
-		debug('wrong token')
 		res.send('Error, wrong token')
 	}
 })
@@ -125,7 +123,6 @@ function decideMessage(sender, textInput) {
 				}
 				sendTextMessage(sender, msg)
 			} else {
-			// if(l.mode === "Minibus taxi"){
 				sendTextMessage(sender,
 				`Take a minibus taxi from ${l.route}, travel for ${(l.distance/1000).toFixed(2)} km in approx ${l.duration} minutes and trip cost is R${l.fare}`)
 			}
