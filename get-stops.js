@@ -4,8 +4,8 @@ module.exports = () => {
 
 	return new Promise((resolve, reject) => {
 
-		const CLIENT_ID = '709b10a8-342e-4637-8cd0-47d48107c31d';
-  	const CLIENT_SECRET = 'ShDVjohLxFrsiFxM7tNlVZ8QMnuENDAGjVHKpKNsxgE=';
+		const CLIENT_ID = process.env.CLIENT_ID
+		const CLIENT_SECRET = process.env.CLIENT_SECRET
 
   	const clientOptions = {
       method: "POST",
