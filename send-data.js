@@ -1,11 +1,11 @@
 const request = require('request')
 
-function textMessage(sender, text) {
+const textMessage = (sender, text) => {
 	let messageData = { text: text }
 	sendRequest(sender, messageData)
 }
 
-function journeySummary(sender, summary) {
+const journeySummary = (sender, summary) => {
 	let messageData = {
 
 		"attachment": {
@@ -64,7 +64,28 @@ function journeySummary(sender, summary) {
 	sendRequest(sender, messageData)
 }
 
-function location(sender) {
+const possibleStops = (sender, stops) => {
+	let messageData = {
+
+		"attachment":{
+      "type":"template",
+      "payload":{
+        "template_type":"button",
+        "text":"Please confirm your destination!",
+        "buttons": stops.map((stop )=> {	
+					return {
+						"type": "postback",
+						"title": stop.name,
+						"payload": `to ${stop.name}`
+					}		
+				})
+      }
+    }
+	}
+	sendRequest(sender, messageData)
+}
+
+const location = sender => {
 	let messageData = {
 		"text": "Please share your location:",
 		"quick_replies": [
@@ -76,7 +97,7 @@ function location(sender) {
 	sendRequest(sender, messageData)
 }
 
-function sendRequest(sender, messageData) {
+const sendRequest = (sender, messageData) => {
 
 	return new Promise((resolve, reject) => {
 		request({
@@ -105,4 +126,6 @@ function sendRequest(sender, messageData) {
 
 exports.textMessage = textMessage
 exports.journeySummary = journeySummary
+exports.possibleStops = possibleStops
 exports.location = location
+

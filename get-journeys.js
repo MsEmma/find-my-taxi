@@ -1,7 +1,7 @@
 const request = require('request')
 
 // whereismytransport api call
-function getJourneys(loc, dest) {
+const getJourneys = (loc, dest) => {
 
 	console.log("Location", loc)
 	console.log("Destination", dest)
@@ -23,7 +23,7 @@ function getJourneys(loc, dest) {
 			}
   	}	
 
-		request(clientOptions, function (error, response, body) {
+		request(clientOptions, (error, response, body) => {
 
 			const TOKEN = JSON.parse(body).access_token;
 
@@ -45,43 +45,41 @@ function getJourneys(loc, dest) {
 				body: JSON.stringify(params)
 			}
 
-			request(options, function (error, response, body) {
+			request(options, (error, response, body) => {
 				return resolve(JSON.parse(body))
 			})
 		})
 	})
 }
 
-function journeyDetails(loc, dest) {
+const journeyDetails = async (loc, dest) => {
 
-	return getJourneys(loc, dest)
-	.then(result => {
-		return result.itineraries.map(itinerary => {
-			return itinerary.legs
-		})
+	const journeys = await getJourneys(loc, dest)
+
+	const legs = journeys.itineraries.map(itinerary => {
+		return itinerary.legs
 	})
-	.then(legs => {
-		return legs.map(leg => {
-			return leg.map(lp => {
-				if(lp.type === "Transit") {
-					return {
-						mode: "Minibus taxi",
-						distance: lp.distance.value,
-						route: lp.line.name,
-						fare: lp.fare.cost.amount,
-						duration: Math.round(lp.duration/60)
-					}
-				} else {
-					return {
-						mode: lp.type,
-						distance: lp.distance.value,
-						duration: Math.round(lp.duration/60),
-						directions: lp.directions.map(dir =>{
-							return `${dir.instruction} for ${dir.distance.value}m`
-						})
-					}
+
+	return legs.map(leg => {
+		return leg.map(lp => {
+			if(lp.type === "Transit") {
+				return {
+					mode: "Minibus taxi",
+					distance: lp.distance.value,
+					route: lp.line.name,
+					fare: lp.fare.cost.amount,
+					duration: Math.round(lp.duration/60)
 				}
-			})
+			} else {
+				return {
+					mode: lp.type,
+					distance: lp.distance.value,
+					duration: Math.round(lp.duration/60),
+					directions: lp.directions.map(dir =>{
+						return `${dir.instruction} for ${dir.distance.value}m`
+					})
+				}
+			}
 		})
 	})
 }

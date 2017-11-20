@@ -40,10 +40,6 @@ module.exports = [
       "coordinates": [ 18.51694, -33.96371 ]
     },
     {
-      "name": "Athlone Stadium",
-      "coordinates": [ 18.51463, -33.96318 ]
-    },
-    {
       "name": "Athlone Taxi Rank",
       "coordinates": [ 18.5032, -33.96115 ]
     },
@@ -68,10 +64,6 @@ module.exports = [
       "coordinates": [ 18.4898, -33.82488 ]
     },
     {
-      "name": "Bayside Mall",
-      "coordinates": [ 18.49, -33.82398 ]
-    },
-    {
       "name": "Bellville Taxi Rank",
       "coordinates": [ 18.63137, -33.90499 ]
     },
@@ -86,10 +78,6 @@ module.exports = [
     {
       "name": "Blackheath Train Station",
       "coordinates": [ 18.69981, -33.96412 ]
-    },
-    {
-      "name": "Blackheath Train Station",
-      "coordinates": [ 18.70334, -33.96321 ]
     },
     {
       "name": "Bloekombos Taxi Rank",
@@ -164,36 +152,12 @@ module.exports = [
       "coordinates": [ 18.69774, -33.85491 ]
     },
     {
-      "name": "Cape Gate Mall",
-      "coordinates": [ 18.6947, -33.85477 ]
-    },
-    {
-      "name": "Cape Gate Mall",
-      "coordinates": [ 18.69726, -33.85497 ]
-    },
-    {
       "name": "Cape Town Station",
       "coordinates": [ 18.4265, -33.92444 ]
     },
     {
-      "name": "Cape Town Station",
-      "coordinates": [ 18.42639, -33.92087 ]
-    },
-    {
-      "name": "Cape Town Station",
-      "coordinates": [ 18.42463, -33.92314 ]
-    },
-    {
       "name": "Cape Town Taxi Rank",
       "coordinates": [ 18.42842, -33.92264 ]
-    },
-    {
-      "name": "Cape Town Taxi Rank",
-      "coordinates": [ 18.42711, -33.92224 ]
-    },
-    {
-      "name": "Cape Town Taxi Rank",
-      "coordinates": [ 18.42703, -33.92238 ]
     },
     {
       "name": "Cape Town Train Station",
@@ -290,10 +254,6 @@ module.exports = [
     {
       "name": "Delft The Hague",
       "coordinates": [ 18.63392, -33.96022 ]
-    },
-    {
-      "name": "Delft, The Hague",
-      "coordinates": [ 18.64676, -33.95819 ]
     },
     {
       "name": "Donegal Avenue",
@@ -468,10 +428,6 @@ module.exports = [
       "coordinates": [ 18.61023, -33.89279 ]
     },
     {
-      "name": 'Karl Bremer Hospital',
-      "coordinates": [ 18.60918, -33.89296 ]
-    },
-    {
       "name": 'Kayamandi Mall Taxi Rank',
       "coordinates": [ 18.85417, -33.92124 ]
     },
@@ -608,10 +564,6 @@ module.exports = [
       "coordinates": [ 18.72016, -33.98949 ]
     },
     {
-      "name": 'Melton Rose Station',
-      "coordinates": [ 18.72009, -33.989 ]
-    },
-    {
       "name": 'Mfuleni Taxi Rank',
       "coordinates": [ 18.68034, -34.00344 ]
     },
@@ -698,22 +650,6 @@ module.exports = [
     {
       "name": 'Parow Centre',
       "coordinates": [ 18.59732, -33.90599 ]
-    },
-    {
-      "name": 'Parow Centre',
-      "coordinates": [ 18.59724, -33.90496 ]
-    },
-    {
-      "name": 'Parow Centre',
-      "coordinates": [ 18.59857, -33.90388 ]
-    },
-    {
-      "name": 'Parow Centre',
-      "coordinates": [ 18.59827, -33.90722 ]
-    },
-    {
-      "name": 'Parow Centre',
-      "coordinates": [ 18.59749, -33.90385 ]
     },
     {
       "name": 'Parow Post Office',
@@ -808,7 +744,7 @@ module.exports = [
       "coordinates": [ 18.67394, -33.97774 ]
     },
     {
-      "name": 'Simon\'s Town Station',
+      "name": 'Simons Town Station',
       "coordinates": [ 18.42523, -34.1868 ]
     },
     {
@@ -830,10 +766,6 @@ module.exports = [
     {
       "name": 'Somerset Hospital',
       "coordinates": [ 18.41801, -33.90512 ]
-    },
-    {
-      "name": 'Somerset Hospital',
-      "coordinates": [ 18.4164, -33.90635 ]
     },
     {
       "name": 'Somerset Hospital, Lower Portswood Road',
@@ -884,24 +816,8 @@ module.exports = [
       "coordinates": [ 18.62097, -34.05181 ]
     },
     {
-      "name": 'Town Centre Taxi Rank',
-      "coordinates": [ 18.61943, -34.04816 ]
-    },
-    {
       "name": 'Tygerberg Hospital',
       "coordinates": [ 18.61141, -33.91555 ]
-    },
-    {
-      "name": 'Tygerberg Hospital',
-      "coordinates": [ 18.61424, -33.91529 ]
-    },
-    {
-      "name": 'Tygerberg Hospital',
-      "coordinates": [ 18.61402, -33.91167 ]
-    },
-    {
-      "name": 'Tygerberg Hospital',
-      "coordinates": [ 18.61322, -33.91203 ]
     },
     {
       "name": 'Tygerberg Train Station',
@@ -934,10 +850,6 @@ module.exports = [
     {
       "name": 'Vangate Mall',
       "coordinates": [ 18.53527, -33.96186 ]
-    },
-    {
-      "name": 'Vangate Mall',
-      "coordinates": [ 18.54058, -33.96176 ]
     },
     {
       "name": 'Vangate Mall Taxi Stop',
@@ -992,10 +904,6 @@ module.exports = [
       "coordinates": [ 18.50392, -33.58724 ]
     },
     {
-      "name": 'Witsand',
-      "coordinates": [ 18.50673, -33.58713 ]
-    },
-    {
       "name": 'Wolga Road, Myrtle Road',
       "coordinates": [ 18.57099, -33.94583 ]
     },
@@ -1006,10 +914,6 @@ module.exports = [
     {
       "name": 'Wynberg Taxi Rank',
       "coordinates": [ 18.4722, -34.00517 ]
-    },
-    {
-      "name": 'Wynberg Taxi Rank',
-      "coordinates": [ 18.47118, -34.00408 ]
     },
     {
       "name": 'Ysterplaat Railway Station',

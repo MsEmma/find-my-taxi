@@ -13,8 +13,9 @@ const journeyDetails = require('./get-journeys').journeyDetails
 const sendTextMessage = require('./send-data').textMessage
 const sendJourneySummary = require('./send-data').journeySummary
 const sendLocation = require('./send-data').location
-
-const stops = require('./stops')
+const possibleStops = require('./send-data').possibleStops
+const collections = require('./db').collections
+// const stops = require('./stops')
 
 app.set('port', (process.env.PORT || 5000))
 
@@ -25,7 +26,7 @@ app.use(bodyParser.urlencoded({extended: false}))
 app.use(bodyParser.json())
 
 // index
-app.get('/', function (req, res) {
+app.get('/', (req, res) => {
 	res.send("Hi I am an awesome chatbot")
 })
 
@@ -39,7 +40,7 @@ app.get('/webhook/', function (req, res) {
 })
 
 // to post data
-app.post('/webhook/', function (req, res) {
+app.post('/webhook/', (req, res) => {
 	const myID = 300416860375397
 	const data = req.body.entry[0]
 	
@@ -57,7 +58,7 @@ app.post('/webhook/', function (req, res) {
 					displayJourney(sender, loc, dest)
 				}
 			} else if (event.postback && event.postback.payload && sender != myID) {
-				const text = JSON.stringify(event.postback)
+				const text = event.postback.payload
 				decideMessage(sender, text)
 			} else if (event.message && event.message.text && sender != myID) {
 				const text = event.message.text
@@ -68,7 +69,7 @@ app.post('/webhook/', function (req, res) {
 	res.sendStatus(200)
 })
 
-app.use(function (err, req, res, next) {
+app.use((err, req, res, next) => {
 	console.error(err.stack)
 	if (req.sender) {
 		sendTextMessage(req.sender, 'Oops, an internal error occurred: ' + err.message)
@@ -78,12 +79,12 @@ app.use(function (err, req, res, next) {
 
 let senderDest = {}
 
-function storeSenderDest(senderId, dest) {
+const storeSenderDest = (senderId, dest) => {
 	senderDest[senderId] = dest
 	return dest
 }
 
-function getSenderDest(senderId) {
+const getSenderDest = senderId => {
 	const dest = senderDest[senderId]
 	if (!dest) {
 		throw new Error('dest for senderId not found: ' + senderId)
@@ -91,14 +92,14 @@ function getSenderDest(senderId) {
 	return dest
 }
 
-function sendTextMessages(sender, messages) {
+const sendTextMessages = (sender, messages) => {
 	messages.map((message, i) => {
 		const interval = (i + 1) * 1000
 		setTimeout(() => { sendTextMessage(sender, message) }, interval)
 	})
 }
 
-function decideMessage(sender, textInput) {
+const decideMessage = async (sender, textInput) => {
 	let text = textInput.toLowerCase()
 
 	if (text === "hi" || text.includes("get_started_payload")){
@@ -145,34 +146,42 @@ function decideMessage(sender, textInput) {
 		else if(text.includes("route2")) return routeDetails(routes[1])
 		else if(text.includes("route3")) return routeDetails(routes[2])
 
+	} else if (textInput.startsWith("to ")) {
+
+		text = text.replace("to ", "")
+
+		storeSenderDest(sender, text)
+		const messages = [`Okay, let’s get you ${textInput}!`, "Where are you now?"]
+		sendTextMessages(sender, messages)
+		setTimeout(() => { sendLocation(sender) }, 3000)			
+		
 	} else {
 
-		const getStop = stops.filter(stop => {	
-			const name = stop.name.toLowerCase()
-			return name === text
-		})
+		const { Stops } = await collections
+		const stops = await Stops.find(
+			{ $text: { $search: text }},
+   		{ score: { $meta: "textScore" }}
+		).sort({ score: { $meta: "textScore" }})
+		.limit(3)
+		.toArray()
 
-		debug('getStop', getStop)
-		if(!R.isEmpty(getStop)) {
+		console.log("Stops", stops)
+		debug('Stops', stops)
 
-			storeSenderDest(sender, getStop[0])
-			const messages = [`Okay, let’s get you to ${text.toUpperCase()}!`, "Where are you now?"]
-			sendTextMessages(sender, messages)
-			setTimeout(() => { sendLocation(sender) }, 3000)			
-		} else {
-			sendTextMessage(sender, "Stop cannot be found, please type a valid destination")
-		}
+		stops && stops.length > 0 ? possibleStops(sender, stops) :
+		sendTextMessage(sender, "Stop cannot be found, please type a valid destination")
+		
 	}
 }
 
 const senderJourney = {}
 
-function storeSenderJourney(senderId, journey) {
+const storeSenderJourney = (senderId, journey) => {
 	senderJourney[senderId] = journey
 	return journey
 }
 
-function getSenderJourney(senderId) {
+const getSenderJourney = senderId => {
 	const journey = senderJourney[senderId]
 	if (!journey) {
 		throw new Error('journey for senderId not found: ' + senderId)
@@ -180,41 +189,40 @@ function getSenderJourney(senderId) {
 	return journey
 }
 
-function displayJourney(sender, loc, dest) {
+const displayJourney = async (sender, loc, dest) => {
 
-	journeyDetails(loc, dest)
-	.then(result => storeSenderJourney(sender, result))
-	.then(result => {
+	const details = await journeyDetails(loc, dest)
+	storeSenderJourney(sender, details)
+	
+	const summary = details.map(route => {
 
-		const summary = result.map(route => {
+		let routeDistance = 0,
+			routeDuration = 0,
+			routeCost = 0,
+			noOfTaxis = 0
 
-			let routeDistance = 0,
-				routeDuration = 0,
-				routeCost = 0,
-				noOfTaxis = 0
+		route.map(leg => {
 
-			route.map(leg => {
-
-				if(leg.mode === "Minibus taxi"){
-						noOfTaxis++
-						routeCost += leg.fare
-					}
-					routeDistance += leg.distance
-					routeDuration += leg.duration
-			})
-
-			return {
-				routeDistance,
-				routeDuration,
-				routeCost,
-				noOfTaxis
-			}
+			if(leg.mode === "Minibus taxi"){
+					noOfTaxis++
+					routeCost += leg.fare
+				}
+				routeDistance += leg.distance
+				routeDuration += leg.duration
 		})
 
-		sendJourneySummary(sender, summary)
+		return {
+			routeDistance,
+			routeDuration,
+			routeCost,
+			noOfTaxis
+		}
 	})
+
+	sendJourneySummary(sender, summary)
+	
 }
 
-app.listen(app.get('port'), function() {
+app.listen(app.get('port'), () => {
 	console.log('running on port', app.get('port'))
 })

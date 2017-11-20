@@ -19,7 +19,7 @@ module.exports = () => {
       }
   	}
 
-  	request(clientOptions, function (error, response, body) {
+  	request(clientOptions, (error, response, body) => {
 
     	const TOKEN = JSON.parse(body).access_token;
 
@@ -33,7 +33,7 @@ module.exports = () => {
 	      url: "https://platform.whereismytransport.com//api/stops?agencies=CVVPBFb_v0KzC6cFAJGOkw&offset=200"
 	    }
 
-	    request(options, function (error, response, body) {
+	    request(options, (error, response, body) => {
 	      return resolve(JSON.parse(body))
 	    })
   	})

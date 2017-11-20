@@ -1,5 +1,5 @@
 {
-  "name": "emma-test-chatbot",
+  "name": "find-my-taxi",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -13,6 +13,7 @@
     "debug": "^3.0.0",
     "express": "^4.13.4",
     "express-session": "^1.15.2",
+    "mongodb": "^2.2.33",
     "ramda": "^0.24.1",
     "request": "^2.71.0"
   }
