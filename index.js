@@ -1,10 +1,7 @@
 'use strict'
 
 const express = require('express')
-const session = require('express-session')
 const bodyParser = require('body-parser')
-const request = require('request')
-const R = require('ramda')
 const debug = require('debug')('fmt')
 const app = express()
 
@@ -15,7 +12,7 @@ const sendJourneySummary = require('./send-data').journeySummary
 const sendLocation = require('./send-data').location
 const possibleStops = require('./send-data').possibleStops
 const collections = require('./db').collections
-// const stops = require('./stops')
+// const stopps = require('./stops')
 
 app.set('port', (process.env.PORT || 5000))
 
@@ -148,9 +145,11 @@ const decideMessage = async (sender, textInput) => {
 
 	} else if (textInput.startsWith("to ")) {
 
-		text = text.replace("to ", "")
+		const stop = textInput.replace("to ", "")
+		const { Stops } = await collections
+		const destination = await Stops.findOne({ name: stop })
 
-		storeSenderDest(sender, text)
+		storeSenderDest(sender, destination)
 		const messages = [`Okay, let’s get you ${textInput}!`, "Where are you now?"]
 		sendTextMessages(sender, messages)
 		setTimeout(() => { sendLocation(sender) }, 3000)			
@@ -158,6 +157,7 @@ const decideMessage = async (sender, textInput) => {
 	} else {
 
 		const { Stops } = await collections
+
 		const stops = await Stops.find(
 			{ $text: { $search: text }},
    		{ score: { $meta: "textScore" }}
