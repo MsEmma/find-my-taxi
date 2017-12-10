@@ -14,45 +14,45 @@ const journeySummary = (sender, summary) => {
 				"template_type": "list",
 				"elements": [
 					{
-						"title": "There are 3 possible routes to your destination",
+						"title": "There are 3 possible options to your destination",
 						"image_url": "https://fb-s-d-a.akamaihd.net/h-ak-fbx/v/t1.0-9/17103294_300759917007758_1443368003349594057_n.jpg?oh=e67a96ec7acb9ff0e01fc5612402f3eb&oe=5A08F2F2&__gda__=1509960767_b79aca0c3386cbb087cd592f91845532",
-						"subtitle": "Below are the summary details for all routes",
+						"subtitle": "Below is the total distance, duration and fare for each option",
 					},
 					{
-						"title": `Route 2: Walk and use ${summary[0].noOfTaxis} taxis`,
-						"subtitle": `Total distance: ${summary[0].routeDistance / 1000} km
-									Total duration: ${ summary[0].routeDuration}mins
-									Total fare: R${ summary[1].routeCost}`,
+						"title": `Option 1: Walk and use ${summary[0].noOfTaxis} taxis`,
+						"subtitle": `Distance: ${summary[0].routeDistance / 1000} km
+									Duration: ${ summary[0].routeDuration}mins
+									Fare: R${ summary[0].routeCost}`,
 						"buttons": [
 							{
 								"type": "postback",
-								"title": "Route 1",
+								"title": "Option 1",
 								"payload": "route1"
 							}
 						]
 					},
 					{
-						"title": `Route 2: Walk and use ${summary[1].noOfTaxis} taxis`,
-						"subtitle": `Total distance: ${summary[1].routeDistance / 1000} km
-									Total duration: ${ summary[1].routeDuration}mins
-									Total fare: R${ summary[1].routeCost}`,
+						"title": `Option 2: Walk and use ${summary[1].noOfTaxis} taxis`,
+						"subtitle": `Distance: ${summary[1].routeDistance / 1000} km
+									Duration: ${ summary[1].routeDuration}mins
+									Fare: R${ summary[1].routeCost}`,
 						"buttons": [
 							{
 								"type": "postback",
-								"title": "Route 2",
+								"title": "Option 2",
 								"payload": "route2"
 							}
 						]
 					},
 					{
-						"title": `Route 3: Walk and use ${summary[2].noOfTaxis} taxis`,
-						"subtitle": `Total distance: ${summary[2].routeDistance / 1000} km
-									Total duration: ${ summary[2].routeDuration}mins
-									Total fare: R${ summary[2].routeCost}`,
+						"title": `Option 3: Walk and use ${summary[2].noOfTaxis} taxis`,
+						"subtitle": `Distance: ${summary[2].routeDistance / 1000} km
+									Duration: ${ summary[2].routeDuration}mins
+									Fare: R${ summary[2].routeCost}`,
 						"buttons": [
 							{
 								"type": "postback",
-								"title": "Route 3",
+								"title": "Option 3",
 								"payload": "route3"
 							}
 						]
