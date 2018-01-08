@@ -99,13 +99,28 @@ const sendTextMessages = (sender, messages) => {
 const decideMessage = async (sender, textInput) => {
 	let text = textInput.toLowerCase()
 
-	if (text === "hi" || text.includes("get_started_payload")){
+	if (text.includes("get_started_payload")) {
 
 		const messages = [
 			"Welcome to Find My Taxi 😄 We will give you directions for getting around using minibus taxis. 🚌",
 		 	"Right now, we can only tell you about areas near Cape Town. 🇿🇦",
 		 	"Give it a try! You can type “help” at any time, or “restart” to start again.",
 		 	"Where are you going? Type the name of the taxi rank."
+		]
+
+		return sendTextMessages(sender, messages)
+
+	} else if (text === "hi" ){
+
+		sendTextMessage(sender, "Hi 😄, Where are you going? Type the name of the taxi rank.")
+		
+	} else if (text === "help" || text.includes("how")) {
+
+		const messages = [
+			"Find My Taxi tries to give you directions for getting around using minibus taxis 🚌 in Cape Town, South Africa.Our app is quite new, so we aplologise if it doesn’t always work perfectly.",
+			"Type 'hi' to start chatting to the bot.", "Type 'restart' to start again and find a new route.",
+			"Type 'about' to learn more about our team.",
+			"If you need to get in touch with us, visit our Facebook page or send us a message here.We'll try to get   back to you within 24 hours."
 		]
 
 		return sendTextMessages(sender, messages)
