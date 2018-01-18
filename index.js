@@ -117,7 +117,7 @@ const decideMessage = async (sender, textInput) => {
 	} else if (text === "help" || text.includes("how")) {
 
 		const messages = [
-			"Find My Taxi tries to give you directions for getting around using minibus taxis 🚌 in Cape Town, South Africa.Our app is quite new, so we aplologise if it doesn’t always work perfectly.",
+			"Find My Taxi tries to give you directions for getting around using minibus taxis 🚌 in Cape Town, South Africa 🇿🇦.Our platform is quite new, so we aplologise if it doesn’t always work perfectly.",
 			"Type 'hi' to start chatting to the bot.", "Type 'restart' to start again and find a new route.",
 			"Type 'about' to learn more about our team.",
 			"If you need to get in touch with us, visit our Facebook page or send us a message here.We'll try to get   back to you within 24 hours."
@@ -125,6 +125,22 @@ const decideMessage = async (sender, textInput) => {
 
 		return sendTextMessages(sender, messages)
 
+	} else if (text === "about") {
+
+		const messages = [
+			"This bot was made with love by Emma Phiri and Sam Beckbessinger.💛", "All of the data comes from the wonderful team at WhereIsMyTransport.", "We respect your privacy and are not storing or selling your information." 
+		]
+
+		return sendTextMessages(sender, messages)
+
+	} else if (text === "contact") {
+
+		const messages = [
+			"If you need to get in touch with us, visit our Facebook page or our website.", "We unfortunately won’t see any messages you type here."
+		]
+
+		return sendTextMessages(sender, messages)
+	
 	} else if (text.includes("route")) {
 
 		const routes = getSenderJourney(sender)
